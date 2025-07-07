@@ -35,42 +35,37 @@ export default async function handler(req, res) {
     // Parse form data - FormData sends as multipart/form-data
     let formData = {};
     
-    // Check if body exists at all
-    if (!req.body) {
-      console.error('No request body received!');
+    // Validate req.body early to avoid accessing undefined properties
+    if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
+      console.error('Empty or invalid request body');
       return res.status(400).json({ 
-        error: 'No request body received',
-        debug: {
-          method: req.method,
+        error: 'Empty or invalid request body',
+        debug: { 
+          body: req.body, 
           contentType: req.headers['content-type'],
-          bodyType: typeof req.body,
-          body: req.body
+          bodyType: typeof req.body
         }
       });
     }
     
-    // FormData from fetch() sends as multipart/form-data
-    // Vercel should parse this automatically, but let's handle it manually
-    if (typeof req.body === 'object') {
-      // Vercel might have already parsed it
+    // Adjust FormData parsing to be more robust
+    if (typeof req.body === 'object' && req.body !== null) {
       formData = req.body;
       console.log('Using parsed object:', formData);
     } else if (typeof req.body === 'string') {
-      // Parse manually if it's a string
       console.log('Parsing string body:', req.body);
       const pairs = req.body.split('&');
+      formData = {};
       
       for (const pair of pairs) {
         const [key, value] = pair.split('=');
         if (key && value) {
-          // Decode URL-encoded values
           const decodedKey = decodeURIComponent(key);
           const decodedValue = decodeURIComponent(value);
           
-          // Handle nested contact[field] format
           if (decodedKey.startsWith('contact[') && decodedKey.endsWith(']')) {
-            const fieldName = decodedKey.slice(8, -1); // Remove 'contact[' and ']'
-            if (!formData.contact) formData.contact = {};
+            const fieldName = decodedKey.slice(8, -1);
+            formData.contact = formData.contact || {};
             formData.contact[fieldName] = decodedValue;
           } else {
             formData[decodedKey] = decodedValue;
@@ -79,9 +74,8 @@ export default async function handler(req, res) {
       }
       console.log('Parsed form data:', formData);
     } else {
-      console.error('Unknown body type:', typeof req.body);
       return res.status(400).json({ 
-        error: 'Unknown body type',
+        error: 'Invalid body format',
         bodyType: typeof req.body,
         body: req.body
       });
@@ -89,8 +83,8 @@ export default async function handler(req, res) {
 
     console.log('Parsed formData:', formData);
 
-    // Extract contact data
-    const contact = formData.contact || formData;
+    // Ensure contact exists - handle cases where contact isn't defined
+    const contact = formData.contact || (typeof formData === 'object' ? formData : {});
     
     console.log('Extracted contact data:', contact);
     console.log('All contact fields:', Object.keys(contact));
