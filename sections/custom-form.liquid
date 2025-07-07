@@ -467,29 +467,50 @@
 
     // Form submission handling
     form.addEventListener('submit', function(e) {
-      if (!validateForm()) {
-        e.preventDefault();
+      e.preventDefault(); // Prevent default form submission
+      
+      console.log('Form submitting to:', form.action);
+      console.log('Form action URL:', form.action);
+      
+      // Check if webhook URL is set
+      if (!form.action || form.action.includes('contact') || form.action === window.location.href) {
+        console.error('No webhook URL configured!');
+        alert('Form is not configured with a webhook URL. Please set the webhook URL in the theme customizer.');
         return;
       }
-
-      // Add timestamp before submission
-      const timestampInput = form.querySelector('input[name="contact[timestamp]"]');
-      if (timestampInput) {
-        timestampInput.value = new Date().toISOString();
+      
+      // Get form data
+      const formData = new FormData(form);
+      
+      // Log form data for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log('Form data:', key, value);
       }
-
-      // Ensure we have an email field (required by Shopify)
-      ensureEmailField();
-
-      // Handle checkbox arrays
-      handleCheckboxArrays();
-
-      // Disable submit button to prevent double submission
-      submitButton.disabled = true;
-      submitButton.textContent = 'Submitting...';
-
-      // Let form submit normally (no preventDefault, no fetch)
-      // Shopify will handle the redirect and success/error messages
+      
+      // Add timestamp
+      formData.set('contact[timestamp]', new Date().toISOString());
+      
+      console.log('About to submit to:', form.action);
+      
+      // Submit via fetch (POST request)
+      fetch(form.action, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Success:', data);
+        alert('Form submitted successfully!');
+        form.reset();
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        alert('Error submitting form. Please try again.');
+      });
     });
 
     function validateForm() {
