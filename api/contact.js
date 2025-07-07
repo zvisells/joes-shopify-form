@@ -22,19 +22,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Parse form data - handle both JSON and form data
+    // Parse form data - FormData sends as multipart/form-data
     let formData = {};
     
     console.log('Content-Type:', req.headers['content-type']);
     console.log('Raw request body:', req.body);
     
-    if (req.headers['content-type']?.includes('application/json')) {
-      // JSON data
-      formData = req.body || {};
-    } else if (req.headers['content-type']?.includes('multipart/form-data')) {
-      // Form data - parse manually
-      const body = req.body || '';
-      const pairs = body.split('&');
+    // FormData from fetch() sends as multipart/form-data
+    // Vercel should parse this automatically, but let's handle it manually
+    if (req.body && typeof req.body === 'object') {
+      // Vercel might have already parsed it
+      formData = req.body;
+    } else if (req.body && typeof req.body === 'string') {
+      // Parse manually if it's a string
+      const pairs = req.body.split('&');
       
       for (const pair of pairs) {
         const [key, value] = pair.split('=');
@@ -52,14 +53,6 @@ export default async function handler(req, res) {
             formData[decodedKey] = decodedValue;
           }
         }
-      }
-    } else {
-      // Try to parse as JSON anyway
-      try {
-        formData = JSON.parse(req.body || '{}');
-      } catch (e) {
-        console.log('Failed to parse as JSON, treating as raw data');
-        formData = { raw: req.body };
       }
     }
 
