@@ -22,18 +22,48 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Parse form data
-    let formData;
+    // Parse form data - handle both JSON and form data
+    let formData = {};
+    
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Raw request body:', req.body);
+    
     if (req.headers['content-type']?.includes('application/json')) {
-      formData = req.body;
+      // JSON data
+      formData = req.body || {};
+    } else if (req.headers['content-type']?.includes('multipart/form-data')) {
+      // Form data - parse manually
+      const body = req.body || '';
+      const pairs = body.split('&');
+      
+      for (const pair of pairs) {
+        const [key, value] = pair.split('=');
+        if (key && value) {
+          // Decode URL-encoded values
+          const decodedKey = decodeURIComponent(key);
+          const decodedValue = decodeURIComponent(value);
+          
+          // Handle nested contact[field] format
+          if (decodedKey.startsWith('contact[') && decodedKey.endsWith(']')) {
+            const fieldName = decodedKey.slice(8, -1); // Remove 'contact[' and ']'
+            if (!formData.contact) formData.contact = {};
+            formData.contact[fieldName] = decodedValue;
+          } else {
+            formData[decodedKey] = decodedValue;
+          }
+        }
+      }
     } else {
-      formData = req.body;
+      // Try to parse as JSON anyway
+      try {
+        formData = JSON.parse(req.body || '{}');
+      } catch (e) {
+        console.log('Failed to parse as JSON, treating as raw data');
+        formData = { raw: req.body };
+      }
     }
 
-    // Log the raw data for debugging
-    console.log('Raw request body:', req.body);
     console.log('Parsed formData:', formData);
-    console.log('Content-Type:', req.headers['content-type']);
 
     // Extract contact data
     const contact = formData.contact || formData;
