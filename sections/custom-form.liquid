@@ -479,6 +479,18 @@
         return;
       }
       
+      // Validate form
+      if (!validateForm()) {
+        console.error('Form validation failed');
+        return;
+      }
+      
+      // Ensure email field exists
+      ensureEmailField();
+      
+      // Handle checkbox arrays
+      handleCheckboxArrays();
+      
       // Get form data
       const formData = new FormData(form);
       
