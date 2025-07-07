@@ -30,8 +30,16 @@ export default async function handler(req, res) {
       formData = req.body;
     }
 
+    // Log the raw data for debugging
+    console.log('Raw request body:', req.body);
+    console.log('Parsed formData:', formData);
+    console.log('Content-Type:', req.headers['content-type']);
+
     // Extract contact data
     const contact = formData.contact || formData;
+    
+    console.log('Extracted contact data:', contact);
+    console.log('Email field:', contact.email);
     
     // Validate required fields
     if (!contact.email) {
