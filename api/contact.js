@@ -62,12 +62,35 @@ export default async function handler(req, res) {
     const contact = formData.contact || formData;
     
     console.log('Extracted contact data:', contact);
-    console.log('Email field:', contact.email);
+    console.log('All contact fields:', Object.keys(contact));
+    
+    // Find email field - check multiple possible names
+    let email = contact.email;
+    if (!email) {
+      // Check for other possible email field names
+      const emailFields = Object.keys(contact).filter(key => 
+        key.toLowerCase().includes('email') || 
+        key.toLowerCase().includes('e-mail')
+      );
+      if (emailFields.length > 0) {
+        email = contact[emailFields[0]];
+        console.log('Found email in field:', emailFields[0], email);
+      }
+    }
+    
+    console.log('Final email value:', email);
     
     // Validate required fields
-    if (!contact.email) {
-      return res.status(400).json({ error: 'Email is required' });
+    if (!email) {
+      return res.status(400).json({ 
+        error: 'Email is required',
+        availableFields: Object.keys(contact),
+        contactData: contact
+      });
     }
+    
+    // Add email to contact object for consistency
+    contact.email = email;
 
     // Prepare email content
     const emailContent = formatEmailHTML(contact, CONFIG);
