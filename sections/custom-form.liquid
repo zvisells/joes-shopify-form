@@ -1,0 +1,1129 @@
+{%- liquid
+  assign form_id = 'custom-form-' | append: section.id
+  assign recipient_email = section.settings.recipient_email | default: shop.email
+  assign subject_line = section.settings.subject_line | default: 'New Form Submission'
+-%}
+
+<div class="custom-form-section color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    {% if section.settings.heading != blank %}
+      <h2 class="custom-form-heading inline-richtext {{ section.settings.heading_size }}">
+        {{ section.settings.heading }}
+      </h2>
+    {% endif %}
+    
+    {% if section.settings.description != blank %}
+      <div class="custom-form-description rte">
+        {{ section.settings.description }}
+      </div>
+    {% endif %}
+
+    <form 
+      id="{{ form_id }}" 
+      class="custom-form" 
+      method="POST" 
+      action="{% if section.settings.webhook_url != blank %}{{ section.settings.webhook_url }}{% else %}{{ routes.root_url }}contact{% endif %}"
+      novalidate
+    >
+      <input type="hidden" name="form_type" value="contact">
+      <input type="hidden" name="utf8" value="✓">
+      <input type="hidden" name="contact[subject]" value="{{ subject_line }}">
+      <input type="hidden" name="contact[timestamp]" value="">
+
+      <div class="custom-form-fields">
+        {% for block in section.blocks %}
+          {% liquid
+            assign field_width = block.settings.field_width | default: 100
+            assign field_required = block.settings.required | default: false
+            assign field_id = form_id | append: '-field-' | append: forloop.index
+          %}
+          
+          <div class="custom-form-field" style="width: {{ field_width }}%;" data-field-type="{{ block.type }}">
+            {% case block.type %}
+              {% when 'text' %}
+                <label for="{{ field_id }}" class="custom-form-label">
+                  {{ block.settings.label }}
+                  {% if field_required %}<span class="required">*</span>{% endif %}
+                </label>
+                <input 
+                  type="text" 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                  placeholder="{{ block.settings.placeholder }}"
+                  class="custom-form-input"
+                  {% if field_required %}required{% endif %}
+                >
+
+              {% when 'email' %}
+                <label for="{{ field_id }}" class="custom-form-label">
+                  {{ block.settings.label }}
+                  {% if field_required %}<span class="required">*</span>{% endif %}
+                </label>
+                <input 
+                  type="email" 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: 'email' }}]"
+                  placeholder="{{ block.settings.placeholder }}"
+                  class="custom-form-input"
+                  {% if field_required %}required{% endif %}
+                >
+
+              {% when 'textarea' %}
+                <label for="{{ field_id }}" class="custom-form-label">
+                  {{ block.settings.label }}
+                  {% if field_required %}<span class="required">*</span>{% endif %}
+                </label>
+                <textarea 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                  placeholder="{{ block.settings.placeholder }}"
+                  class="custom-form-textarea"
+                  rows="{{ block.settings.rows | default: 4 }}"
+                  {% if field_required %}required{% endif %}
+                ></textarea>
+
+              {% when 'dropdown' %}
+                <label for="{{ field_id }}" class="custom-form-label">
+                  {{ block.settings.label }}
+                  {% if field_required %}<span class="required">*</span>{% endif %}
+                </label>
+                <select 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                  class="custom-form-select"
+                  {% if field_required %}required{% endif %}
+                >
+                  <option value="">{{ block.settings.placeholder | default: 'Select an option' }}</option>
+                  {% assign options = block.settings.options | split: ',' %}
+                  {% for option in options %}
+                    <option value="{{ option | strip }}">{{ option | strip }}</option>
+                  {% endfor %}
+                </select>
+
+              {% when 'checkbox_multi' %}
+                <fieldset class="custom-form-fieldset">
+                  <legend class="custom-form-label">
+                    {{ block.settings.label }}
+                    {% if field_required %}<span class="required">*</span>{% endif %}
+                  </legend>
+                  {% assign options = block.settings.options | split: ',' %}
+                  {% for option in options %}
+                    {% assign checkbox_id = field_id | append: '-' | append: forloop.index %}
+                    <div class="custom-form-checkbox-wrapper">
+                      <input 
+                        type="checkbox" 
+                        id="{{ checkbox_id }}"
+                        name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                        value="{{ option | strip }}"
+                        class="custom-form-checkbox"
+                        data-group="{{ block.settings.name | default: block.settings.label | handleize }}"
+                      >
+                      <label for="{{ checkbox_id }}" class="custom-form-checkbox-label">
+                        {{ option | strip }}
+                      </label>
+                    </div>
+                  {% endfor %}
+                </fieldset>
+
+              {% when 'boolean' %}
+                <div class="custom-form-boolean-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="{{ field_id }}"
+                    name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                    value="true"
+                    class="custom-form-checkbox"
+                    {% if field_required %}required{% endif %}
+                  >
+                  <label for="{{ field_id }}" class="custom-form-checkbox-label">
+                    {{ block.settings.label }}
+                    {% if field_required %}<span class="required">*</span>{% endif %}
+                  </label>
+                </div>
+
+              {% when 'product_search' %}
+                <label for="{{ field_id }}" class="custom-form-label">
+                  {{ block.settings.label }}
+                  {% if field_required %}<span class="required">*</span>{% endif %}
+                </label>
+                <div class="custom-form-product-search" data-field-id="{{ field_id }}">
+                  <input 
+                    type="text" 
+                    id="{{ field_id }}"
+                    class="custom-form-product-search-input"
+                    placeholder="{{ block.settings.placeholder | default: 'Search for a product...' }}"
+                    autocomplete="off"
+                    {% if field_required %}required{% endif %}
+                  >
+                  <div class="custom-form-product-results" style="display: none;"></div>
+                  <div class="custom-form-selected-product" style="display: none;">
+                    <div class="selected-product-info">
+                      <span class="selected-product-title"></span>
+                      <span class="selected-product-variant"></span>
+                    </div>
+                    <button type="button" class="clear-selection">×</button>
+                  </div>
+                  <input 
+                    type="hidden" 
+                    name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                    class="product-data-input"
+                  >
+                </div>
+
+            {% endcase %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="custom-form-actions">
+        <button type="submit" class="custom-form-submit button button--primary">
+          {{ section.settings.submit_text | default: 'Submit' }}
+        </button>
+      </div>
+
+
+    </form>
+  </div>
+</div>
+
+<style>
+  .custom-form-section {
+    padding: rgb(var(--color-foreground));
+    background: rgba(var(--color-background));
+  }
+
+  .custom-form-heading {
+    margin-bottom: 2rem;
+    color: rgb(var(--color-foreground));
+  }
+
+  .custom-form-description {
+    margin-bottom: 3rem;
+    color: rgb(var(--color-foreground));
+  }
+
+  .custom-form-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .custom-form-field {
+    min-width: 250px;
+    flex-shrink: 0;
+  }
+
+  .custom-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: rgb(var(--color-foreground));
+  }
+
+  .custom-form-label .required {
+    color: rgb(var(--color-accent));
+    margin-left: 0.25rem;
+  }
+
+  .custom-form-input,
+  .custom-form-textarea,
+  .custom-form-select {
+    width: 100%;
+    padding: 1rem;
+    border: 0.1rem solid rgba(var(--color-foreground), 0.2);
+    border-radius: var(--border-radius);
+    background: rgba(var(--color-background));
+    color: rgb(var(--color-foreground));
+    font-size: 1.4rem;
+    transition: border-color 0.3s ease;
+  }
+
+  .custom-form-input:focus,
+  .custom-form-textarea:focus,
+  .custom-form-select:focus {
+    outline: none;
+    border-color: rgb(var(--color-accent));
+  }
+
+  .custom-form-textarea {
+    resize: vertical;
+    min-height: 10rem;
+  }
+
+  .custom-form-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .custom-form-fieldset legend {
+    padding: 0;
+    margin-bottom: 1rem;
+  }
+
+  .custom-form-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .custom-form-checkbox {
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-right: 1rem;
+    accent-color: rgb(var(--color-accent));
+  }
+
+  .custom-form-checkbox-label {
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+
+  .custom-form-boolean-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .custom-form-boolean-wrapper .custom-form-checkbox {
+    margin-right: 1rem;
+  }
+
+  .custom-form-product-search {
+    position: relative;
+  }
+
+  .custom-form-product-search-input {
+    width: 100%;
+    padding: 1rem;
+    border: 0.1rem solid rgba(var(--color-foreground), 0.2);
+    border-radius: var(--border-radius);
+    background: rgba(var(--color-background));
+    color: rgb(var(--color-foreground));
+    font-size: 1.4rem;
+    transition: border-color 0.3s ease;
+  }
+
+  .custom-form-product-search-input:focus {
+    outline: none;
+    border-color: rgb(var(--color-accent));
+  }
+
+  .custom-form-product-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(var(--color-background));
+    border: 0.1rem solid rgba(var(--color-foreground), 0.2);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    max-height: 20rem;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .custom-form-product-result {
+    padding: 1rem;
+    border-bottom: 0.1rem solid rgba(var(--color-foreground), 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .custom-form-product-result:hover {
+    background: rgba(var(--color-accent), 0.1);
+  }
+
+  .custom-form-product-result:last-child {
+    border-bottom: none;
+  }
+
+  .product-result-title {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: rgb(var(--color-foreground));
+  }
+
+  .product-result-variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .product-result-variant {
+    padding: 0.25rem 0.5rem;
+    background: rgba(var(--color-foreground), 0.1);
+    border-radius: calc(var(--border-radius) / 2);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .product-result-variant:hover {
+    background: rgba(var(--color-accent), 0.2);
+  }
+
+  .custom-form-selected-product {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: rgba(var(--color-accent), 0.1);
+    border: 0.1rem solid rgba(var(--color-accent), 0.2);
+    border-radius: var(--border-radius);
+    margin-top: 0.5rem;
+  }
+
+  .selected-product-info {
+    flex: 1;
+  }
+
+  .selected-product-title {
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.25rem;
+    color: rgb(var(--color-foreground));
+  }
+
+  .selected-product-variant {
+    font-size: 1.2rem;
+    color: rgba(var(--color-foreground), 0.7);
+  }
+
+  .clear-selection {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: rgba(var(--color-foreground), 0.7);
+    padding: 0.5rem;
+    line-height: 1;
+    transition: color 0.2s ease;
+  }
+
+  .clear-selection:hover {
+    color: rgb(var(--color-accent));
+  }
+
+
+  .custom-form-actions {
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  .custom-form-submit {
+    padding: 1.5rem 3rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--border-radius);
+    background: rgb(var(--color-accent));
+    color: rgb(var(--color-background));
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .custom-form-submit:hover {
+    background: rgba(var(--color-accent), 0.9);
+    transform: translateY(-0.1rem);
+  }
+
+  .custom-form-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+
+
+  /* Responsive adjustments */
+  @media screen and (max-width: 749px) {
+    .custom-form-field {
+      min-width: 100%;
+    }
+  }
+
+  @media screen and (max-width: 550px) {
+    .custom-form-fields {
+      gap: 1rem;
+    }
+    
+    .custom-form-submit {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('{{ form_id }}');
+    if (!form) return;
+
+    const submitButton = form.querySelector('.custom-form-submit');
+
+    // Product search functionality
+    const productSearchFields = form.querySelectorAll('.custom-form-product-search');
+    productSearchFields.forEach(setupProductSearch);
+
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+      if (!validateForm()) {
+        e.preventDefault();
+        return;
+      }
+
+      // Add timestamp before submission
+      const timestampInput = form.querySelector('input[name="contact[timestamp]"]');
+      if (timestampInput) {
+        timestampInput.value = new Date().toISOString();
+      }
+
+      // Ensure we have an email field (required by Shopify)
+      ensureEmailField();
+
+      // Handle checkbox arrays
+      handleCheckboxArrays();
+
+      // Disable submit button to prevent double submission
+      submitButton.disabled = true;
+      submitButton.textContent = 'Submitting...';
+
+      // Let form submit normally (no preventDefault, no fetch)
+      // Shopify will handle the redirect and success/error messages
+    });
+
+    function validateForm() {
+      const requiredFields = form.querySelectorAll('[required]');
+      let isValid = true;
+
+      requiredFields.forEach(field => {
+        if (field.type === 'checkbox' && field.dataset.group) {
+          // For checkbox groups, check if at least one is checked
+          const checkboxGroup = form.querySelectorAll(`[data-group="${field.dataset.group}"]`);
+          const isChecked = Array.from(checkboxGroup).some(cb => cb.checked);
+          
+          if (!isChecked) {
+            field.setCustomValidity('This field is required');
+            isValid = false;
+          } else {
+            field.setCustomValidity('');
+          }
+        } else if (field.type === 'checkbox' && !field.checked) {
+          // For single checkboxes
+          field.setCustomValidity('This field is required');
+          isValid = false;
+        } else if (field.type !== 'checkbox' && !field.value.trim()) {
+          field.setCustomValidity('This field is required');
+          isValid = false;
+        } else {
+          field.setCustomValidity('');
+        }
+      });
+
+      return isValid;
+    }
+
+    function handleCheckboxArrays() {
+      const checkboxGroups = {};
+      
+      // Group checkboxes by data-group attribute
+      form.querySelectorAll('input[type="checkbox"][data-group]').forEach(checkbox => {
+        const groupName = checkbox.dataset.group;
+        if (!checkboxGroups[groupName]) {
+          checkboxGroups[groupName] = [];
+        }
+        if (checkbox.checked) {
+          checkboxGroups[groupName].push(checkbox.value);
+        }
+      });
+
+      // Create hidden inputs for checkbox groups
+      Object.keys(checkboxGroups).forEach(groupName => {
+        const hiddenFieldName = `contact[${groupName}]`;
+        const existingHidden = form.querySelector(`input[name="${hiddenFieldName}"][type="hidden"]`);
+        
+        if (existingHidden) {
+          existingHidden.remove();
+        }
+
+        if (checkboxGroups[groupName].length > 0) {
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.name = hiddenFieldName;
+          hiddenInput.value = checkboxGroups[groupName].join(', ');
+          form.appendChild(hiddenInput);
+        }
+
+        // Disable original checkboxes to prevent duplicate submission
+        form.querySelectorAll(`input[type="checkbox"][data-group="${groupName}"]`).forEach(cb => {
+          cb.disabled = true;
+        });
+      });
+    }
+
+
+
+    function ensureEmailField() {
+      // Check if we already have an email field
+      const emailField = form.querySelector('input[name="contact[email]"]');
+      if (emailField && emailField.value.trim()) {
+        return; // Email field exists and has value
+      }
+
+      // Look for any email type input
+      const anyEmailInput = form.querySelector('input[type="email"]');
+      if (anyEmailInput && anyEmailInput.value.trim()) {
+        // Create hidden field with the email value
+        const hiddenEmail = document.createElement('input');
+        hiddenEmail.type = 'hidden';
+        hiddenEmail.name = 'contact[email]';
+        hiddenEmail.value = anyEmailInput.value;
+        form.appendChild(hiddenEmail);
+      }
+    }
+
+
+
+    function setupProductSearch(searchContainer) {
+      const input = searchContainer.querySelector('.custom-form-product-search-input');
+      const results = searchContainer.querySelector('.custom-form-product-results');
+      const selectedProduct = searchContainer.querySelector('.custom-form-selected-product');
+      const hiddenInput = searchContainer.querySelector('.product-data-input');
+      const clearButton = searchContainer.querySelector('.clear-selection');
+
+      let searchTimeout;
+      let currentProducts = [];
+
+      // Search input handler
+      input.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+          hideResults();
+          return;
+        }
+
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          searchProducts(query);
+        }, 300);
+      });
+
+      // Clear selection handler
+      clearButton.addEventListener('click', function() {
+        clearSelection();
+      });
+
+      // Hide results when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!searchContainer.contains(e.target)) {
+          hideResults();
+        }
+      });
+
+      function searchProducts(query) {
+        fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10`)
+          .then(response => response.json())
+          .then(data => {
+            currentProducts = data.resources.results.products || [];
+            displayResults(currentProducts);
+          })
+          .catch(error => {
+            console.error('Product search error:', error);
+            hideResults();
+          });
+      }
+
+      function displayResults(products) {
+        if (products.length === 0) {
+          results.innerHTML = '<div class="custom-form-product-result">No products found</div>';
+          results.style.display = 'block';
+          return;
+        }
+
+        results.innerHTML = '';
+        products.forEach(product => {
+          const productDiv = document.createElement('div');
+          productDiv.className = 'custom-form-product-result';
+          productDiv.innerHTML = `
+            <div class="product-result-title">${product.title}</div>
+            <div class="product-result-variants">
+              ${product.variants.map(variant => 
+                `<span class="product-result-variant" data-product-id="${product.id}" data-variant-id="${variant.id}" data-product-title="${product.title}" data-variant-title="${variant.title}">
+                  ${variant.title}
+                </span>`
+              ).join('')}
+            </div>
+          `;
+          results.appendChild(productDiv);
+        });
+
+        // Add click handlers to variants
+        results.querySelectorAll('.product-result-variant').forEach(variant => {
+          variant.addEventListener('click', function() {
+            selectProduct(
+              this.dataset.productId,
+              this.dataset.variantId,
+              this.dataset.productTitle,
+              this.dataset.variantTitle
+            );
+          });
+        });
+
+        results.style.display = 'block';
+      }
+
+      function selectProduct(productId, variantId, productTitle, variantTitle) {
+        // Use simple text format instead of JSON
+        const productData = `${productTitle} - ${variantTitle} (ID: ${productId}/${variantId})`;
+        
+        hiddenInput.value = productData;
+        
+        selectedProduct.querySelector('.selected-product-title').textContent = productTitle;
+        selectedProduct.querySelector('.selected-product-variant').textContent = variantTitle;
+        selectedProduct.style.display = 'flex';
+        
+        input.value = `${productTitle} - ${variantTitle}`;
+        hideResults();
+      }
+
+      function clearSelection() {
+        hiddenInput.value = '';
+        selectedProduct.style.display = 'none';
+        input.value = '';
+        input.focus();
+      }
+
+      function hideResults() {
+        results.style.display = 'none';
+      }
+    }
+
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Custom Form",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Contact Us"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "Heading size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "Small"
+        },
+        {
+          "value": "h1",
+          "label": "Medium"
+        },
+        {
+          "value": "h0",
+          "label": "Large"
+        }
+      ],
+      "default": "h1"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description"
+    },
+    {
+      "type": "text",
+      "id": "recipient_email",
+      "label": "Recipient Email",
+      "info": "Where form submissions will be sent. Defaults to store email if left blank."
+    },
+    {
+      "type": "text",
+      "id": "subject_line",
+      "label": "Email Subject Line",
+      "default": "New Form Submission"
+    },
+    {
+      "type": "text",
+      "id": "webhook_url",
+      "label": "Webhook URL",
+      "info": "Enter your Vercel webhook URL (e.g., https://your-project.vercel.app/api/contact) to send emails to your specific address."
+    },
+    {
+      "type": "text",
+      "id": "submit_text",
+      "label": "Submit Button Text",
+      "default": "Submit"
+    },
+
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "background-1"
+    },
+    {
+      "type": "header",
+      "content": "Section padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Text Field",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Text Field"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Field Name",
+          "info": "Used for form data. Leave blank to auto-generate from label."
+        },
+        {
+          "type": "text",
+          "id": "placeholder",
+          "label": "Placeholder"
+        },
+        {
+          "type": "checkbox",
+          "id": "required",
+          "label": "Required field"
+        },
+        {
+          "type": "range",
+          "id": "field_width",
+          "min": 25,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Field width",
+          "default": 50
+        }
+      ]
+    },
+    {
+      "type": "email",
+      "name": "Email Field",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Email"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Field Name",
+          "default": "email"
+        },
+        {
+          "type": "text",
+          "id": "placeholder",
+          "label": "Placeholder",
+          "default": "your@email.com"
+        },
+        {
+          "type": "checkbox",
+          "id": "required",
+          "label": "Required field",
+          "default": true
+        },
+        {
+          "type": "range",
+          "id": "field_width",
+          "min": 25,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Field width",
+          "default": 50
+        }
+      ]
+    },
+    {
+      "type": "textarea",
+      "name": "Textarea Field",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Message"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Field Name",
+          "info": "Used for form data. Leave blank to auto-generate from label."
+        },
+        {
+          "type": "text",
+          "id": "placeholder",
+          "label": "Placeholder"
+        },
+        {
+          "type": "range",
+          "id": "rows",
+          "min": 3,
+          "max": 10,
+          "step": 1,
+          "label": "Rows",
+          "default": 4
+        },
+        {
+          "type": "checkbox",
+          "id": "required",
+          "label": "Required field"
+        },
+        {
+          "type": "range",
+          "id": "field_width",
+          "min": 25,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Field width",
+          "default": 100
+        }
+      ]
+    },
+    {
+      "type": "dropdown",
+      "name": "Dropdown Field",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Select Option"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Field Name",
+          "info": "Used for form data. Leave blank to auto-generate from label."
+        },
+        {
+          "type": "text",
+          "id": "placeholder",
+          "label": "Placeholder",
+          "default": "Choose an option"
+        },
+        {
+          "type": "textarea",
+          "id": "options",
+          "label": "Options",
+          "info": "Separate each option with a comma",
+          "default": "Option 1, Option 2, Option 3"
+        },
+        {
+          "type": "checkbox",
+          "id": "required",
+          "label": "Required field"
+        },
+        {
+          "type": "range",
+          "id": "field_width",
+          "min": 25,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Field width",
+          "default": 50
+        }
+      ]
+    },
+    {
+      "type": "checkbox_multi",
+      "name": "Multiple Checkboxes",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Select Multiple"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Field Name",
+          "info": "Used for form data. Leave blank to auto-generate from label."
+        },
+        {
+          "type": "textarea",
+          "id": "options",
+          "label": "Options",
+          "info": "Separate each option with a comma",
+          "default": "Option 1, Option 2, Option 3"
+        },
+        {
+          "type": "checkbox",
+          "id": "required",
+          "label": "Required field (at least one must be selected)"
+        },
+        {
+          "type": "range",
+          "id": "field_width",
+          "min": 25,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Field width",
+          "default": 50
+        }
+      ]
+    },
+    {
+      "type": "boolean",
+      "name": "Single Checkbox",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "I agree to the terms and conditions"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Field Name",
+          "info": "Used for form data. Leave blank to auto-generate from label."
+        },
+        {
+          "type": "checkbox",
+          "id": "required",
+          "label": "Required field"
+        },
+        {
+          "type": "range",
+          "id": "field_width",
+          "min": 25,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Field width",
+          "default": 100
+        }
+      ]
+    },
+    {
+      "type": "product_search",
+      "name": "Product Search",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Select Product"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Field Name",
+          "info": "Used for form data. Leave blank to auto-generate from label."
+        },
+        {
+          "type": "text",
+          "id": "placeholder",
+          "label": "Placeholder",
+          "default": "Search for a product..."
+        },
+        {
+          "type": "checkbox",
+          "id": "required",
+          "label": "Required field"
+        },
+        {
+          "type": "range",
+          "id": "field_width",
+          "min": 25,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Field width",
+          "default": 100
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Form",
+      "blocks": [
+        {
+          "type": "text",
+          "settings": {
+            "label": "Full Name",
+            "required": true,
+            "field_width": 50
+          }
+        },
+        {
+          "type": "email",
+          "settings": {
+            "label": "Email Address",
+            "required": true,
+            "field_width": 50
+          }
+        },
+        {
+          "type": "dropdown",
+          "settings": {
+            "label": "Inquiry Type",
+            "options": "General Question, Product Support, Partnership, Other",
+            "required": true,
+            "field_width": 50
+          }
+        },
+        {
+          "type": "textarea",
+          "settings": {
+            "label": "Message",
+            "required": true,
+            "field_width": 100
+          }
+        },
+        {
+          "type": "boolean",
+          "settings": {
+            "label": "I agree to receive marketing communications",
+            "field_width": 100
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %} 
