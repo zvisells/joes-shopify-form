@@ -22,19 +22,42 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Debug everything about the request
+    console.log('=== REQUEST DEBUG ===');
+    console.log('Method:', req.method);
+    console.log('Headers:', req.headers);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Body type:', typeof req.body);
+    console.log('Body:', req.body);
+    console.log('Body keys:', req.body ? Object.keys(req.body) : 'undefined');
+    console.log('===================');
+    
     // Parse form data - FormData sends as multipart/form-data
     let formData = {};
     
-    console.log('Content-Type:', req.headers['content-type']);
-    console.log('Raw request body:', req.body);
+    // Check if body exists at all
+    if (!req.body) {
+      console.error('No request body received!');
+      return res.status(400).json({ 
+        error: 'No request body received',
+        debug: {
+          method: req.method,
+          contentType: req.headers['content-type'],
+          bodyType: typeof req.body,
+          body: req.body
+        }
+      });
+    }
     
     // FormData from fetch() sends as multipart/form-data
     // Vercel should parse this automatically, but let's handle it manually
-    if (req.body && typeof req.body === 'object') {
+    if (typeof req.body === 'object') {
       // Vercel might have already parsed it
       formData = req.body;
-    } else if (req.body && typeof req.body === 'string') {
+      console.log('Using parsed object:', formData);
+    } else if (typeof req.body === 'string') {
       // Parse manually if it's a string
+      console.log('Parsing string body:', req.body);
       const pairs = req.body.split('&');
       
       for (const pair of pairs) {
@@ -54,6 +77,14 @@ export default async function handler(req, res) {
           }
         }
       }
+      console.log('Parsed form data:', formData);
+    } else {
+      console.error('Unknown body type:', typeof req.body);
+      return res.status(400).json({ 
+        error: 'Unknown body type',
+        bodyType: typeof req.body,
+        body: req.body
+      });
     }
 
     console.log('Parsed formData:', formData);
