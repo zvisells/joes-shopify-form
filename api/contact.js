@@ -25,10 +25,10 @@ export default async function handler(req, res) {
     // Debug everything about the request
     console.log('=== REQUEST DEBUG ===');
     console.log('Method:', req.method);
-    console.log('Headers:', req.headers);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
     console.log('Content-Type:', req.headers['content-type']);
     console.log('Body type:', typeof req.body);
-    console.log('Body:', req.body);
+    console.log('Body:', JSON.stringify(req.body, null, 2));
     console.log('Body keys:', req.body ? Object.keys(req.body) : 'undefined');
     console.log('===================');
     
@@ -86,24 +86,36 @@ export default async function handler(req, res) {
     // Ensure contact exists - handle cases where contact isn't defined
     const contact = formData.contact || (typeof formData === 'object' ? formData : {});
     
-    console.log('Extracted contact data:', contact);
+    console.log('=== CONTACT DATA DEBUG ===');
+    console.log('formData:', JSON.stringify(formData, null, 2));
+    console.log('Extracted contact data:', JSON.stringify(contact, null, 2));
     console.log('All contact fields:', Object.keys(contact));
+    console.log('Contact object keys:', contact ? Object.keys(contact) : 'undefined');
+    console.log('========================');
     
     // Find email field - check multiple possible names
     let email = contact.email;
+    console.log('=== EMAIL SEARCH DEBUG ===');
+    console.log('Initial email value:', email);
+    
     if (!email) {
       // Check for other possible email field names
       const emailFields = Object.keys(contact).filter(key => 
         key.toLowerCase().includes('email') || 
         key.toLowerCase().includes('e-mail')
       );
+      console.log('Email fields found:', emailFields);
+      
       if (emailFields.length > 0) {
         email = contact[emailFields[0]];
-        console.log('Found email in field:', emailFields[0], email);
+        console.log('Found email in field:', emailFields[0], 'Value:', email);
+      } else {
+        console.log('No email fields found in contact object');
       }
     }
     
     console.log('Final email value:', email);
+    console.log('========================');
     
     // Validate required fields
     if (!email) {

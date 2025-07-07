@@ -24,6 +24,7 @@
       method="POST" 
       action="{% if section.settings.webhook_url != blank %}{{ section.settings.webhook_url }}{% else %}{{ routes.root_url }}contact{% endif %}"
       novalidate
+      onsubmit="console.log('Form submitted via HTML!');"
     >
       <input type="hidden" name="form_type" value="contact">
       <input type="hidden" name="utf8" value="✓">
@@ -456,8 +457,13 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, looking for form: {{ form_id }}');
     const form = document.getElementById('{{ form_id }}');
-    if (!form) return;
+    if (!form) {
+      console.error('Form not found!');
+      return;
+    }
+    console.log('Form found:', form);
 
     const submitButton = form.querySelector('.custom-form-submit');
 
