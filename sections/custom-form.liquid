@@ -26,10 +26,10 @@
       novalidate
       onsubmit="console.log('Form submitted via HTML!');"
     >
-          <input type="hidden" name="form_type" value="custom_webhook">
-    <input type="hidden" name="utf8" value="✓">
-    <input type="hidden" name="data[subject]" value="{{ subject_line }}">
-    <input type="hidden" name="data[timestamp]" value="">
+      <input type="hidden" name="form_type" value="webhook_form">
+      <input type="hidden" name="utf8" value="✓">
+      <input type="hidden" name="contact[subject]" value="{{ subject_line }}">
+      <input type="hidden" name="contact[timestamp]" value="">
 
       <div class="custom-form-fields">
         {% for block in section.blocks %}
@@ -46,10 +46,10 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                              <input 
-                type="text" 
-                id="{{ field_id }}" 
-                name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                <input 
+                  type="text" 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
                   placeholder="{{ block.settings.placeholder }}"
                   class="custom-form-input"
                   {% if field_required %}required{% endif %}
@@ -60,10 +60,10 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                              <input 
-                type="email" 
-                id="{{ field_id }}" 
-                name="data[{{ block.settings.name | default: 'email' }}]"
+                <input 
+                  type="email" 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: 'email' }}]"
                   placeholder="{{ block.settings.placeholder }}"
                   class="custom-form-input"
                   {% if field_required %}required{% endif %}
@@ -74,9 +74,9 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                              <textarea 
-                id="{{ field_id }}" 
-                name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                <textarea 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
                   placeholder="{{ block.settings.placeholder }}"
                   class="custom-form-textarea"
                   rows="{{ block.settings.rows | default: 4 }}"
@@ -88,9 +88,9 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                              <select 
-                id="{{ field_id }}" 
-                name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                <select 
+                  id="{{ field_id }}"
+                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
                   class="custom-form-select"
                   {% if field_required %}required{% endif %}
                 >
@@ -111,10 +111,10 @@
                   {% for option in options %}
                     {% assign checkbox_id = field_id | append: '-' | append: forloop.index %}
                     <div class="custom-form-checkbox-wrapper">
-                                      <input 
-                  type="checkbox" 
-                  id="{{ checkbox_id }}" 
-                  name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                      <input 
+                        type="checkbox" 
+                        id="{{ checkbox_id }}"
+                        name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
                         value="{{ option | strip }}"
                         class="custom-form-checkbox"
                         data-group="{{ block.settings.name | default: block.settings.label | handleize }}"
@@ -128,10 +128,10 @@
 
               {% when 'boolean' %}
                 <div class="custom-form-boolean-wrapper">
-                                  <input 
-                  type="checkbox" 
-                  id="{{ field_id }}" 
-                  name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                  <input 
+                    type="checkbox" 
+                    id="{{ field_id }}"
+                    name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
                     value="true"
                     class="custom-form-checkbox"
                     {% if field_required %}required{% endif %}
@@ -166,7 +166,7 @@
                   </div>
                   <input 
                     type="hidden" 
-                    name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                    name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
                     class="product-data-input"
                   >
                 </div>
@@ -478,40 +478,16 @@
       console.log('Form submitting to:', form.action);
       console.log('Form action URL:', form.action);
       
-      // Prevent double submission
-      if (submitButton && submitButton.disabled) {
-        console.log('Form already submitting, ignoring duplicate submission');
-        return;
-      }
-      
-      // Disable submit button to prevent double submission
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Submitting...';
-      }
-      
       // Check if webhook URL is set
       if (!form.action || form.action === window.location.href || form.action.includes('/contact') && !form.action.includes('vercel.app')) {
         console.error('No webhook URL configured!');
         alert('Form is not configured with a webhook URL. Please set the webhook URL in the theme customizer.');
-        
-        // Re-enable submit button
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Submit';
-        }
         return;
       }
       
       // Validate form
       if (!validateForm()) {
         console.error('Form validation failed');
-        
-        // Re-enable submit button
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Submit';
-        }
         return;
       }
       
@@ -523,135 +499,83 @@
       
       // Convert form to JSON object
       const formData = new FormData(form);
-      const jsonData = { data: {} };
+      const jsonData = { contact: {} };
       
       // Convert FormData to JSON
       for (let [key, value] of formData.entries()) {
-        if (key.startsWith('data[') && key.endsWith(']')) {
-          const fieldName = key.slice(5, -1); // Remove 'data[' and ']'
-          jsonData.data[fieldName] = value;
+        if (key.startsWith('contact[') && key.endsWith(']')) {
+          const fieldName = key.slice(8, -1); // Remove 'contact[' and ']'
+          jsonData.contact[fieldName] = value;
         } else {
           jsonData[key] = value;
         }
       }
       
       // Add timestamp
-      jsonData.data.timestamp = new Date().toISOString();
+      jsonData.contact.timestamp = new Date().toISOString();
       
       // Log form data for debugging
-      console.log('=== SHOPIFY FORM DEBUG v3 ===');
+      console.log('=== SHOPIFY FORM DEBUG ===');
       console.log('Form action URL:', form.action);
       console.log('JSON data:', JSON.stringify(jsonData, null, 2));
-              console.log('JSON data keys:', Object.keys(jsonData));
-        console.log('JSON data.data exists:', !!jsonData.data);
-        console.log('JSON data.data keys:', jsonData.data ? Object.keys(jsonData.data) : 'no data');
-      console.log('JSON string length:', JSON.stringify(jsonData).length);
-      console.log('============================');
+      console.log('========================');
       
       console.log('About to submit to:', form.action);
       
-      // Submit via original XMLHttpRequest (bypassing Shopify's wrapper)
-      console.log('=== ORIGINAL XHR DEBUG ===');
+      // Submit via fetch (POST request with JSON)
+      console.log('=== FETCH REQUEST DEBUG ===');
       console.log('Sending request to:', form.action);
       console.log('Request method:', 'POST');
       console.log('Request body type:', 'JSON');
       
-      // Store original XMLHttpRequest before Shopify can wrap it
-      const OriginalXHR = window.XMLHttpRequest;
-      console.log('Using original XHR:', OriginalXHR);
-      
-      const xhr = new OriginalXHR();
-      xhr.open('POST', form.action, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          console.log('=== XHR RESPONSE DEBUG ===');
-          console.log('Response status:', xhr.status);
-          console.log('Response text:', xhr.responseText);
-          console.log('Response headers:', xhr.getAllResponseHeaders());
-          console.log('==========================');
-          
-          if (xhr.status >= 200 && xhr.status < 300) {
-            // Success
-            let data;
-            try {
-              data = JSON.parse(xhr.responseText);
-            } catch (e) {
-              data = { message: 'Success', response: xhr.responseText };
-            }
-            
-            console.log('=== SUCCESS RESPONSE ===');
-            console.log('Response data:', data);
-            console.log('Form submission successful!');
-            console.log('=======================');
-            
-            // Re-enable submit button
-            if (submitButton) {
-              submitButton.disabled = false;
-              submitButton.textContent = 'Submit';
-            }
-            
-            // Show success message
-            alert('Form submitted successfully!');
-            
-            // Reset form
-            form.reset();
-            
-            // Clear any selected products
-            form.querySelectorAll('.custom-form-selected-product').forEach(selected => {
-              selected.style.display = 'none';
-            });
-            
-            // Re-enable checkboxes that were disabled
-            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-              cb.disabled = false;
-            });
-            
-            console.log('Form reset and cleanup complete');
-          } else {
-            // Error
-            console.error('=== XHR ERROR DEBUG ===');
-            console.error('XHR status:', xhr.status);
-            console.error('XHR response:', xhr.responseText);
-            console.error('======================');
-            
-            // Re-enable submit button
-            if (submitButton) {
-              submitButton.disabled = false;
-              submitButton.textContent = 'Submit';
-            }
-            
-            // Re-enable checkboxes that were disabled
-            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-              cb.disabled = false;
-            });
-            
-            alert('Error submitting form. Please try again. Status: ' + xhr.status);
-          }
+      fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jsonData),
+        mode: 'cors',
+        credentials: 'omit'
+      })
+      .then(response => {
+        console.log('=== FETCH RESPONSE DEBUG ===');
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      };
-      
-      xhr.onerror = function() {
-        console.error('=== XHR NETWORK ERROR ===');
-        console.error('Network error occurred');
-        console.error('========================');
+        return response.json();
+      })
+      .then(data => {
+        console.log('Response data:', data);
+        console.log('Form submission successful!');
         
-        // Re-enable submit button
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Submit';
-        }
+        // Disable the form completely to prevent any further submissions
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitted ✓';
         
-        // Re-enable checkboxes that were disabled
-        form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-          cb.disabled = false;
-        });
+        // Remove the form action to prevent Shopify from submitting again
+        form.removeAttribute('action');
         
-        alert('Network error. Please check your connection and try again.');
-      };
-      
-      xhr.send(JSON.stringify(jsonData));
+        // Remove all event listeners to prevent resubmission
+        form.replaceWith(form.cloneNode(true));
+        
+        alert('Form submitted successfully!');
+        // Don't reset the form - keep it disabled
+      })
+      .catch(error => {
+        console.error('=== FETCH ERROR DEBUG ===');
+        console.error('Fetch error:', error);
+        console.error('Error message:', error.message);
+        
+        // Re-enable the form on error
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit';
+        
+        alert('Error submitting form. Please try again. Error: ' + error.message);
+      });
     });
 
     function validateForm() {
@@ -701,7 +625,7 @@
 
       // Create hidden inputs for checkbox groups
       Object.keys(checkboxGroups).forEach(groupName => {
-        const hiddenFieldName = `data[${groupName}]`;
+        const hiddenFieldName = `contact[${groupName}]`;
         const existingHidden = form.querySelector(`input[name="${hiddenFieldName}"][type="hidden"]`);
         
         if (existingHidden) {
@@ -711,7 +635,7 @@
         if (checkboxGroups[groupName].length > 0) {
           const hiddenInput = document.createElement('input');
           hiddenInput.type = 'hidden';
-          hiddenInput.name = `data[${groupName}]`;
+          hiddenInput.name = hiddenFieldName;
           hiddenInput.value = checkboxGroups[groupName].join(', ');
           form.appendChild(hiddenInput);
         }
@@ -727,7 +651,7 @@
 
     function ensureEmailField() {
       // Check if we already have an email field
-      const emailField = form.querySelector('input[name="data[email]"]');
+      const emailField = form.querySelector('input[name="contact[email]"]');
       if (emailField && emailField.value.trim()) {
         return; // Email field exists and has value
       }
@@ -738,7 +662,7 @@
         // Create hidden field with the email value
         const hiddenEmail = document.createElement('input');
         hiddenEmail.type = 'hidden';
-        hiddenEmail.name = 'data[email]';
+        hiddenEmail.name = 'contact[email]';
         hiddenEmail.value = anyEmailInput.value;
         form.appendChild(hiddenEmail);
       }
