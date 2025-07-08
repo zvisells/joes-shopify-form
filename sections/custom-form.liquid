@@ -143,37 +143,69 @@
                 </div>
 
               {% when 'product_search' %}
-                <label for="{{ field_id }}" class="custom-form-label">
-                  {{ block.settings.label }}
-                  {% if field_required %}<span class="required">*</span>{% endif %}
-                </label>
-                <div class="custom-form-product-search" data-field-id="{{ field_id }}">
-                  <input 
-                    type="text" 
-                    id="{{ field_id }}"
-                    class="custom-form-product-search-input"
-                    placeholder="{{ block.settings.placeholder | default: 'Search for a product...' }}"
-                    autocomplete="off"
-                    {% if field_required %}required{% endif %}
-                  >
-                  <div class="custom-form-product-results" style="display: none;"></div>
-                  <div class="custom-form-selected-product" style="display: none;">
-                    <div class="selected-product-info">
-                      <span class="selected-product-title"></span>
-                      <span class="selected-product-variant"></span>
+                <div class="custom-form-field">
+                  <label for="{{ field_id }}" class="custom-form-label">{{ block.settings.label }}{% if field_required %}<span class="required">*</span>{% endif %}</label>
+                  <div class="custom-form-product-search-wrapper">
+                    <div class="custom-form-product-search" data-field-id="{{ field_id }}">
+                      <input type="text" id="{{ field_id }}" class="custom-form-product-search-input" placeholder="{{ block.settings.placeholder | default: 'Search for a product...' }}" autocomplete="off" {% if field_required %}required{% endif %}>
+                      <div class="custom-form-product-results" style="display: none;"></div>
+                      <div class="custom-form-selected-product" style="display: none;">
+                        <div class="selected-product-info">
+                          <span class="selected-product-title"></span>
+                          <span class="selected-product-variant"></span>
+                        </div>
+                        <button type="button" class="clear-selection">×</button>
+                      </div>
+                      <input type="hidden" name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]" class="product-data-input">
                     </div>
-                    <button type="button" class="clear-selection">×</button>
                   </div>
-                  <input 
-                    type="hidden" 
-                    name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
-                    class="product-data-input"
-                  >
                 </div>
 
             {% endcase %}
           </div>
         {% endfor %}
+      </div>
+
+      <div class="line-items-section">
+        <h3 class="line-items-heading">Quote Items</h3>
+        <div id="line-item-container">
+          <!-- First line item serves as a template -->
+          <div class="line-item">
+            <div class="line-item-fields">
+              <div class="custom-form-field" style="width: 25%;">
+                <label>Item Title</label>
+                <input type="text" name="contact[items][0][title]" class="custom-form-input" placeholder="e.g., Living Room Window">
+              </div>
+              <div class="custom-form-field" style="width: 15%;">
+                <label>Width (in)</label>
+                <input type="number" name="contact[items][0][width]" class="custom-form-input" placeholder="e.g., 72">
+              </div>
+              <div class="custom-form-field" style="width: 15%;">
+                <label>Height (in)</label>
+                <input type="number" name="contact[items][0][height]" class="custom-form-input" placeholder="e.g., 48">
+              </div>
+              <div class="custom-form-field" style="width: 45%;">
+                  <label>Fabric</label>
+                  <div class="custom-form-product-search-wrapper">
+                    <div class="custom-form-product-search" data-field-id="fabric_picker_0">
+                      <input type="text" class="custom-form-product-search-input" placeholder="Search for a fabric..." autocomplete="off">
+                      <div class="custom-form-product-results" style="display: none;"></div>
+                      <div class="custom-form-selected-product" style="display: none;">
+                        <div class="selected-product-info">
+                          <span class="selected-product-title"></span>
+                          <span class="selected-product-variant"></span>
+                        </div>
+                        <button type="button" class="clear-selection">×</button>
+                      </div>
+                      <input type="hidden" name="contact[items][0][fabric]" class="product-data-input">
+                    </div>
+                  </div>
+              </div>
+            </div>
+            <button type="button" class="remove-line-item button button--secondary">-</button>
+          </div>
+        </div>
+        <button type="button" id="add-line-item" class="button button--secondary">Add Item (+)</button>
       </div>
 
       <div class="custom-form-actions">
@@ -352,23 +384,24 @@
     letter-spacing: 0.05em;
   }
 
-  .product-result-variants {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+  .custom-form-product-search .product-result-variants {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 1rem !important;
+    background: #ff0000 !important; /* TEMP DEBUG - should show red background */
   }
 
-  .product-result-variant {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(var(--color-background));
-    border: 1px solid rgba(var(--color-foreground), 0.15);
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    user-select: none;
+  .custom-form-product-search .product-result-variant {
+    display: flex !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+    background: rgba(var(--color-background)) !important;
+    border: 1px solid rgba(var(--color-foreground), 0.15) !important;
+    border-radius: var(--border-radius) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+    user-select: none !important;
   }
 
   .product-result-variant:hover {
@@ -557,6 +590,35 @@
     transform: none;
   }
 
+  .line-items-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(var(--color-foreground), 0.1);
+  }
+  .line-items-heading {
+    margin-bottom: 1.5rem;
+  }
+  .line-item {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(var(--color-foreground), 0.05);
+  }
+  .line-item-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    flex-grow: 1;
+  }
+  .remove-line-item {
+    height: fit-content;
+    margin-bottom: 1rem; /* Aligns with bottom of inputs */
+  }
+  #add-line-item {
+    margin-top: 1rem;
+  }
 
 
   /* Responsive adjustments */
@@ -606,24 +668,472 @@
 </style>
 
 <script>
+  // ===========================================================================
+  //  HELPER FUNCTIONS
+  // ===========================================================================
+
+  function getProductImageUrl(product, variant) {
+    let imageUrl = null;
+
+    // --- FINAL LOGIC ---
+    // 1. Find the specific image for the variant by matching the variant's ID
+    //    to the `variant_ids` array within the product's image list.
+    if (variant && variant.id && product && product.images && product.images.length > 0) {
+      const image = product.images.find(img => img.variant_ids.includes(variant.id));
+      if (image && image.src) {
+        imageUrl = image.src;
+      }
+    }
+
+    // 2. If no variant-specific image is found, fall back to the product's first image.
+    if (!imageUrl && product && product.images && product.images.length > 0 && product.images[0].src) {
+      imageUrl = product.images[0].src;
+    }
+
+    // If we found a URL, format it for the desired size.
+    if (imageUrl) {
+      if (imageUrl.includes('?')) {
+        return `${imageUrl}&width=300`;
+      }
+      return `${imageUrl}?width=300`;
+    }
+
+    // 3. If all else fails, return the fallback image.
+    return '{{ "no-image.jpg" | asset_url }}';
+  }
+
+  function setupProductSearch(searchWrapper) {
+    const input = searchWrapper.querySelector('.custom-form-product-search-input');
+    const results = searchWrapper.querySelector('.custom-form-product-results');
+    const selectedProduct = searchWrapper.querySelector('.custom-form-selected-product');
+    const hiddenInput = searchWrapper.querySelector('.product-data-input');
+    const clearButton = searchWrapper.querySelector('.clear-selection');
+
+    let searchTimeout;
+    let currentProducts = [];
+
+    // Search input handler
+    input.addEventListener('input', function() {
+      const query = this.value.trim();
+      
+      if (query.length < 2) {
+        hideResults();
+        return;
+      }
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchProducts(query);
+      }, 300);
+    });
+
+    // Clear selection handler
+    clearButton.addEventListener('click', function() {
+      clearSelection();
+    });
+
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!searchWrapper.contains(e.target)) {
+        hideResults();
+      }
+    });
+
+    function searchProducts(query) {
+      console.log('Searching for:', query);
+      
+      // Use Shopify's basic predictive search API (without fields parameter)
+      const searchUrl = `/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10&resources[options][unavailable_products]=last`;
+      
+      fetch(searchUrl)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Predictive search API response:', data);
+          
+          if (!data.resources || !data.resources.results || !data.resources.results.products) {
+            console.log('No products found in response');
+            hideResults();
+            return;
+          }
+          
+          let products = data.resources.results.products;
+          console.log('Raw products from API:', products);
+          
+          // Always fetch individual product details to get complete variant data
+          console.log('Fetching complete product details for all products...');
+          
+          const productPromises = products.map(product => 
+            fetch(`/products/${product.handle}.json`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+              })
+              .then(productData => {
+                console.log(`✅ Fetched details for ${product.handle}:`, productData.product.variants.length, 'variants');
+                return {
+                  id: productData.product.id,
+                  title: productData.product.title,
+                  handle: productData.product.handle,
+                  product_type: productData.product.product_type,
+                  featured_image: productData.product.featured_image,  // Keep as is, but handle in mapping
+                  images: productData.product.images,
+                  variants: productData.product.variants.map(variant => ({  // Updated mapping here
+                    id: variant.id,
+                    title: variant.title,
+                    sku: variant.sku || 'N/A',
+                    price: variant.price ? Math.round(parseFloat(variant.price) * 100) : 0,
+                    available: variant.available,
+                    // Add check for image: use featured_image if available, otherwise fallback
+                    image: variant.featured_image || productData.product.featured_image || { src: '' }  // Default to empty object to avoid undefined
+                  }))
+                };
+              })
+              .catch(err => {
+                console.error(`❌ Error fetching ${product.handle}:`, err);
+                return {
+                  id: product.id,
+                  title: product.title,
+                  handle: product.handle,
+                  variants: [{
+                    id: `${product.id}-default`,
+                    title: 'Default',
+                    sku: 'N/A',
+                    price: 0,
+                    available: true,
+                    image: { src: '' }  // Ensure image is at least an object
+                  }]
+                };
+              })
+          );
+          
+          Promise.all(productPromises)
+            .then(detailedProducts => {
+              console.log('🎉 All detailed products ready:', detailedProducts);
+              currentProducts = detailedProducts.filter(p => p.variants.length > 0);
+              displayResults(currentProducts);
+            });
+        })
+        .catch(error => {
+          console.error('❌ Predictive search error:', error);
+          hideResults();
+        });
+    }
+
+    function displayResults(products) {
+      results.innerHTML = '';
+      products.forEach(product => {
+        if (product.variants && product.variants.length > 0) {
+          const variantsHtml = product.variants.map(variant => {
+            const imageUrl = getProductImageUrl(product, variant);
+            // --- Add the data attributes back in ---
+            return `
+              <div class="product-result-variant" 
+                data-product-id="${product.id}" 
+                data-variant-id="${variant.id}" 
+                data-product-title="${product.title.replace(/"/g, '&quot;')}" 
+                data-variant-title="${variant.title.replace(/"/g, '&quot;')}"
+                data-variant-sku="${variant.sku || 'N/A'}"
+                data-variant-price="${variant.price || '0'}"
+                data-variant-image="${imageUrl}">
+                <img src="${imageUrl}" alt="${variant.title}" class="variant-image-container" />
+                <div class="variant-details">
+                  <span class="variant-name">${product.title} - ${variant.title}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+          results.innerHTML += variantsHtml;
+        }
+      });
+      results.style.display = 'block';
+      addVariantClickHandlers(results);
+    }
+
+    function addVariantClickHandlers(container) {
+      const variantElements = container.querySelectorAll('.product-result-variant');
+      console.log(`Adding click handlers to ${variantElements.length} variants`);
+      
+      variantElements.forEach((variant, index) => {
+        console.log(`Setting up variant ${index + 1}:`, variant.dataset);
+        
+        variant.addEventListener('click', function(e) {
+          console.log('Variant clicked:', this.dataset);
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Add visual feedback
+          this.style.background = 'rgba(var(--color-accent), 0.4)';
+          
+          selectProduct(
+            this.dataset.productId,
+            this.dataset.variantId,
+            this.dataset.productTitle,
+            this.dataset.variantTitle,
+            this.dataset.variantSku,
+            this.dataset.variantPrice,
+            this.dataset.variantImage
+          );
+        });
+        
+        // Also add keyboard support
+        variant.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.click();
+          }
+        });
+        
+        // Make it focusable
+        variant.setAttribute('tabindex', '0');
+      });
+    }
+
+    function selectProduct(productId, variantId, productTitle, variantTitle, variantSku, variantPrice, variantImage) {
+      console.log('=== SELECT PRODUCT CALLED ===');
+      console.log('Parameters:', { productId, variantId, productTitle, variantTitle, variantSku, variantPrice, variantImage });
+      
+      // --- Find the full product and variant objects ---
+      const product = currentProducts.find(p => p.id == productId);
+      if (!product) { console.error('Could not find product with ID:', productId); return; }
+      
+      const variant = product.variants.find(v => v.id == variantId);
+      if (!variant) { console.error('Could not find variant with ID:', variantId); return; }
+
+      // Create comprehensive product data object
+      const productData = {
+        product_id: productId,
+        variant_id: variantId,
+        product_name: productTitle,
+        variant_name: variantTitle,
+        sku: variantSku || 'N/A',
+        price: variantPrice || '0',
+        image: variantImage || '',
+        display_text: `${productTitle} - ${variantTitle} (SKU: ${variantSku || 'N/A'})`
+      };
+      
+      console.log('Product data object:', productData);
+      
+      // Store as JSON string for form submission
+      hiddenInput.value = JSON.stringify(productData);
+      console.log('Hidden input value set to:', hiddenInput.value);
+      
+      // Update display
+      console.log('Updating display elements...');
+      const titleElement = selectedProduct.querySelector('.selected-product-title');
+      const variantElement = selectedProduct.querySelector('.selected-product-variant');
+      
+      if (titleElement) {
+        titleElement.textContent = productTitle;
+        console.log('Title updated');
+      } else {
+        console.error('Title element not found');
+      }
+      
+      if (variantElement) {
+        // Use the helper function for the selected product display image
+        const imageUrl = getProductImageUrl(product, variant);
+        variantElement.innerHTML = `
+          <div class="selected-product-content">
+            ${imageUrl ? `<img src="${imageUrl}" alt="${variantTitle}" class="selected-product-image" loading="lazy">` : ''}
+            <div class="selected-product-details">
+              <div class="selected-variant-name">${variantTitle}</div>
+              <div class="selected-product-sku">SKU: ${variantSku || 'N/A'}</div>
+              ${variantPrice && variantPrice !== '0' ? `<div class="selected-product-price">$${(variantPrice/100).toFixed(2)}</div>` : ''}
+            </div>
+          </div>
+        `;
+        console.log('Variant element updated');
+      } else {
+        console.error('Variant element not found');
+      }
+      
+      selectedProduct.style.display = 'flex';
+      console.log('Selected product display set to flex');
+      
+      input.value = productData.display_text;
+      console.log('Input value set to:', input.value);
+      
+      hideResults();
+      console.log('Results hidden');
+      
+      console.log('=== PRODUCT SELECTION COMPLETE ===');
+    }
+
+    function clearSelection() {
+      hiddenInput.value = '';
+      selectedProduct.style.display = 'none';
+      input.value = '';
+      input.focus();
+    }
+
+    function hideResults() {
+      results.style.display = 'none';
+    }
+  }
+
+  function validateForm(form) {
+    const requiredFields = form.querySelectorAll('[required]');
+    let isValid = true;
+
+    requiredFields.forEach(field => {
+      if (field.type === 'checkbox' && field.dataset.group) {
+        // For checkbox groups, check if at least one is checked
+        const checkboxGroup = form.querySelectorAll(`[data-group="${field.dataset.group}"]`);
+        const isChecked = Array.from(checkboxGroup).some(cb => cb.checked);
+        
+        if (!isChecked) {
+          field.setCustomValidity('This field is required');
+          isValid = false;
+        } else {
+          field.setCustomValidity('');
+        }
+      } else if (field.type === 'checkbox' && !field.checked) {
+        // For single checkboxes
+        field.setCustomValidity('This field is required');
+        isValid = false;
+      } else if (field.type !== 'checkbox' && !field.value.trim()) {
+        field.setCustomValidity('This field is required');
+        isValid = false;
+      } else {
+        field.setCustomValidity('');
+      }
+    });
+
+    return isValid;
+  }
+
+  function handleCheckboxArrays(form) {
+    const checkboxGroups = {};
+    
+    // Group checkboxes by data-group attribute
+    form.querySelectorAll('input[type="checkbox"][data-group]').forEach(checkbox => {
+      const groupName = checkbox.dataset.group;
+      if (!checkboxGroups[groupName]) {
+        checkboxGroups[groupName] = [];
+      }
+      if (checkbox.checked) {
+        checkboxGroups[groupName].push(checkbox.value);
+      }
+    });
+
+    // Create hidden inputs for checkbox groups
+    Object.keys(checkboxGroups).forEach(groupName => {
+      const hiddenFieldName = `contact[${groupName}]`;
+      const existingHidden = form.querySelector(`input[name="${hiddenFieldName}"][type="hidden"]`);
+      
+      if (existingHidden) {
+        existingHidden.remove();
+      }
+
+      if (checkboxGroups[groupName].length > 0) {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = hiddenFieldName;
+        hiddenInput.value = checkboxGroups[groupName].join(', ');
+        form.appendChild(hiddenInput);
+      }
+
+      // Disable original checkboxes to prevent duplicate submission
+      form.querySelectorAll(`input[type="checkbox"][data-group="${groupName}"]`).forEach(cb => {
+        cb.disabled = true;
+      });
+    });
+  }
+
+  function ensureEmailField(form) {
+    // Check if we already have an email field
+    const emailField = form.querySelector('input[name="contact[email]"]');
+    if (emailField && emailField.value.trim()) {
+      return; // Email field exists and has value
+    }
+
+    // Look for any email type input
+    const anyEmailInput = form.querySelector('input[type="email"]');
+    if (anyEmailInput && anyEmailInput.value.trim()) {
+      // Create hidden field with the email value
+      const hiddenEmail = document.createElement('input');
+      hiddenEmail.type = 'hidden';
+      hiddenEmail.name = 'contact[email]';
+      hiddenEmail.value = anyEmailInput.value;
+      form.appendChild(hiddenEmail);
+    }
+  }
+
+  // ===========================================================================
+  //  MAIN EXECUTION
+  // ===========================================================================
+
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, looking for form: {{ form_id }}');
     const form = document.getElementById('{{ form_id }}');
     if (!form) {
       console.error('Form not found!');
       return;
     }
-    console.log('Form found:', form);
 
-    const submitButton = form.querySelector('.custom-form-submit');
+    // --- 1. Initialize Standalone Search Pickers ---
+    const standaloneSearchFields = form.querySelectorAll('.custom-form-product-search-wrapper:not(.line-item .custom-form-product-search-wrapper)');
+    standaloneSearchFields.forEach(setupProductSearch);
+    
+    // --- 2. Initialize Dynamic Line Items ---
+    const lineItemContainer = document.getElementById('line-item-container');
+    const addLineItemButton = document.getElementById('add-line-item');
+    if (lineItemContainer && addLineItemButton) {
+      let lineItemCounter = 1;
 
-    // Product search functionality
-    const productSearchFields = form.querySelectorAll('.custom-form-product-search');
-    productSearchFields.forEach(setupProductSearch);
+      const updateRemoveButtons = () => {
+        const removeButtons = lineItemContainer.querySelectorAll('.remove-line-item');
+        if (removeButtons.length <= 1) {
+          removeButtons.forEach(btn => btn.style.display = 'none');
+        } else {
+          removeButtons.forEach(btn => btn.style.display = 'inline-flex');
+        }
+      };
 
-    // Form submission handling
+      addLineItemButton.addEventListener('click', function() {
+        const template = lineItemContainer.querySelector('.line-item');
+        const clone = template.cloneNode(true);
+
+        clone.querySelectorAll('input[type="text"], input[type="number"], input[type="hidden"]').forEach(input => input.value = '');
+        clone.querySelector('.selected-product-info .selected-product-title').textContent = '';
+        clone.querySelector('.selected-product-info .selected-product-variant').textContent = '';
+        clone.querySelector('.custom-form-selected-product').style.display = 'none';
+        
+        clone.querySelector('input[name*="[title]"]').name = `contact[items][${lineItemCounter}][title]`;
+        clone.querySelector('input[name*="[width]"]').name = `contact[items][${lineItemCounter}][width]`;
+        clone.querySelector('input[name*="[height]"]').name = `contact[items][${lineItemCounter}][height]`;
+        clone.querySelector('.product-data-input').name = `contact[items][${lineItemCounter}][fabric]`;
+        
+        const productSearchWrapper = clone.querySelector('.custom-form-product-search-wrapper');
+        if (productSearchWrapper) {
+          setupProductSearch(productSearchWrapper);
+        }
+
+        lineItemContainer.appendChild(clone);
+        lineItemCounter++;
+        updateRemoveButtons();
+      });
+
+      lineItemContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-line-item')) {
+          if (lineItemContainer.querySelectorAll('.line-item').length > 1) {
+            e.target.closest('.line-item').remove();
+            updateRemoveButtons();
+          }
+        }
+      });
+
+      const firstProductSearch = lineItemContainer.querySelector('.custom-form-product-search-wrapper');
+      if (firstProductSearch) {
+        setupProductSearch(firstProductSearch);
+      }
+      updateRemoveButtons();
+    }
+
+    // --- 3. Initialize Form Submission ---
     form.addEventListener('submit', function(e) {
-      e.preventDefault(); // Prevent default form submission
+      e.preventDefault();
       
       console.log('Form submitting to:', form.action);
       console.log('Form action URL:', form.action);
@@ -636,16 +1146,16 @@
       }
       
       // Validate form
-      if (!validateForm()) {
+      if (!validateForm(form)) {
         console.error('Form validation failed');
         return;
       }
       
       // Ensure email field exists
-      ensureEmailField();
+      ensureEmailField(form);
       
       // Handle checkbox arrays
-      handleCheckboxArrays();
+      handleCheckboxArrays(form);
       
       // Convert form to JSON object
       const formData = new FormData(form);
@@ -703,8 +1213,11 @@
         console.log('Form submission successful!');
         
         // Disable the form completely to prevent any further submissions
-        submitButton.disabled = true;
-        submitButton.textContent = 'Submitted ✓';
+        const submitButton = form.querySelector('.custom-form-submit');
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'Submitted ✓';
+        }
         
         // Remove the form action to prevent Shopify from submitting again
         form.removeAttribute('action');
@@ -721,396 +1234,15 @@
         console.error('Error message:', error.message);
         
         // Re-enable the form on error
-        submitButton.disabled = false;
-        submitButton.textContent = 'Submit';
+        const submitButton = form.querySelector('.custom-form-submit');
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit';
+        }
         
         alert('Error submitting form. Please try again. Error: ' + error.message);
       });
     });
-
-    function validateForm() {
-      const requiredFields = form.querySelectorAll('[required]');
-      let isValid = true;
-
-      requiredFields.forEach(field => {
-        if (field.type === 'checkbox' && field.dataset.group) {
-          // For checkbox groups, check if at least one is checked
-          const checkboxGroup = form.querySelectorAll(`[data-group="${field.dataset.group}"]`);
-          const isChecked = Array.from(checkboxGroup).some(cb => cb.checked);
-          
-          if (!isChecked) {
-            field.setCustomValidity('This field is required');
-            isValid = false;
-          } else {
-            field.setCustomValidity('');
-          }
-        } else if (field.type === 'checkbox' && !field.checked) {
-          // For single checkboxes
-          field.setCustomValidity('This field is required');
-          isValid = false;
-        } else if (field.type !== 'checkbox' && !field.value.trim()) {
-          field.setCustomValidity('This field is required');
-          isValid = false;
-        } else {
-          field.setCustomValidity('');
-        }
-      });
-
-      return isValid;
-    }
-
-    function handleCheckboxArrays() {
-      const checkboxGroups = {};
-      
-      // Group checkboxes by data-group attribute
-      form.querySelectorAll('input[type="checkbox"][data-group]').forEach(checkbox => {
-        const groupName = checkbox.dataset.group;
-        if (!checkboxGroups[groupName]) {
-          checkboxGroups[groupName] = [];
-        }
-        if (checkbox.checked) {
-          checkboxGroups[groupName].push(checkbox.value);
-        }
-      });
-
-      // Create hidden inputs for checkbox groups
-      Object.keys(checkboxGroups).forEach(groupName => {
-        const hiddenFieldName = `contact[${groupName}]`;
-        const existingHidden = form.querySelector(`input[name="${hiddenFieldName}"][type="hidden"]`);
-        
-        if (existingHidden) {
-          existingHidden.remove();
-        }
-
-        if (checkboxGroups[groupName].length > 0) {
-          const hiddenInput = document.createElement('input');
-          hiddenInput.type = 'hidden';
-          hiddenInput.name = hiddenFieldName;
-          hiddenInput.value = checkboxGroups[groupName].join(', ');
-          form.appendChild(hiddenInput);
-        }
-
-        // Disable original checkboxes to prevent duplicate submission
-        form.querySelectorAll(`input[type="checkbox"][data-group="${groupName}"]`).forEach(cb => {
-          cb.disabled = true;
-        });
-      });
-    }
-
-
-
-    function ensureEmailField() {
-      // Check if we already have an email field
-      const emailField = form.querySelector('input[name="contact[email]"]');
-      if (emailField && emailField.value.trim()) {
-        return; // Email field exists and has value
-      }
-
-      // Look for any email type input
-      const anyEmailInput = form.querySelector('input[type="email"]');
-      if (anyEmailInput && anyEmailInput.value.trim()) {
-        // Create hidden field with the email value
-        const hiddenEmail = document.createElement('input');
-        hiddenEmail.type = 'hidden';
-        hiddenEmail.name = 'contact[email]';
-        hiddenEmail.value = anyEmailInput.value;
-        form.appendChild(hiddenEmail);
-      }
-    }
-
-
-
-    function setupProductSearch(searchContainer) {
-      const input = searchContainer.querySelector('.custom-form-product-search-input');
-      const results = searchContainer.querySelector('.custom-form-product-results');
-      const selectedProduct = searchContainer.querySelector('.custom-form-selected-product');
-      const hiddenInput = searchContainer.querySelector('.product-data-input');
-      const clearButton = searchContainer.querySelector('.clear-selection');
-
-      let searchTimeout;
-      let currentProducts = [];
-
-      // Search input handler
-      input.addEventListener('input', function() {
-        const query = this.value.trim();
-        
-        if (query.length < 2) {
-          hideResults();
-          return;
-        }
-
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          searchProducts(query);
-        }, 300);
-      });
-
-      // Clear selection handler
-      clearButton.addEventListener('click', function() {
-        clearSelection();
-      });
-
-      // Hide results when clicking outside
-      document.addEventListener('click', function(e) {
-        if (!searchContainer.contains(e.target)) {
-          hideResults();
-        }
-      });
-
-      function searchProducts(query) {
-        console.log('Searching for:', query);
-        
-        // Use Shopify's basic predictive search API (without fields parameter)
-        const searchUrl = `/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10&resources[options][unavailable_products]=last`;
-        
-        fetch(searchUrl)
-          .then(response => response.json())
-          .then(data => {
-            console.log('Predictive search API response:', data);
-            
-            if (!data.resources || !data.resources.results || !data.resources.results.products) {
-              console.log('No products found in response');
-              hideResults();
-              return;
-            }
-            
-            let products = data.resources.results.products;
-            console.log('Raw products from API:', products);
-            
-            // Always fetch individual product details to get complete variant data
-            console.log('Fetching complete product details for all products...');
-            
-            const productPromises = products.map(product => 
-              fetch(`/products/${product.handle}.json`)
-                .then(response => {
-                  if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                  }
-                  return response.json();
-                })
-                .then(productData => {
-                  console.log(`✅ Fetched details for ${product.handle}:`, productData.product.variants.length, 'variants');
-                  return {
-                    id: productData.product.id,
-                    title: productData.product.title,
-                    handle: productData.product.handle,
-                    product_type: productData.product.product_type,
-                    featured_image: productData.product.featured_image,
-                    images: productData.product.images,
-                    variants: productData.product.variants.map(variant => ({
-                      id: variant.id,
-                      title: variant.title,
-                      sku: variant.sku || 'N/A',
-                      price: variant.price ? Math.round(parseFloat(variant.price) * 100) : 0,
-                      available: variant.available,
-                      featured_image: variant.featured_image,
-                      image: variant.featured_image || productData.product.featured_image
-                    }))
-                  };
-                })
-                .catch(err => {
-                  console.error(`❌ Error fetching ${product.handle}:`, err);
-                  // Create a fallback product with basic info
-                  return {
-                    id: product.id,
-                    title: product.title,
-                    handle: product.handle,
-                    variants: [{
-                      id: `${product.id}-default`,
-                      title: 'Default',
-                      sku: 'N/A',
-                      price: 0,
-                      available: true
-                    }]
-                  };
-                })
-            );
-            
-            Promise.all(productPromises)
-              .then(detailedProducts => {
-                console.log('🎉 All detailed products ready:', detailedProducts);
-                currentProducts = detailedProducts.filter(p => p.variants.length > 0);
-                displayResults(currentProducts);
-              });
-          })
-          .catch(error => {
-            console.error('❌ Predictive search error:', error);
-            hideResults();
-          });
-      }
-
-      function displayResults(products) {
-        if (products.length === 0) {
-          results.innerHTML = '<div class="custom-form-product-result">No products found</div>';
-          results.style.display = 'block';
-          return;
-        }
-
-        results.innerHTML = '';
-        products.forEach(product => {
-          console.log('Processing product:', product.title, 'with', product.variants.length, 'variants');
-          
-          const productDiv = document.createElement('div');
-          productDiv.className = 'custom-form-product-result';
-          productDiv.innerHTML = `
-            <div class="product-result-header">
-              <div class="product-result-title">${product.title}</div>
-              <div class="product-result-type">${product.product_type || ''}</div>
-            </div>
-            <div class="product-result-variants">
-              ${product.variants.map((variant, index) => {
-                console.log(`Variant ${index + 1}:`, variant);
-                
-                // Create image URL using Shopify's image_url filter pattern
-                const imageUrl = variant.image ? 
-                  variant.image.replace(/\.(jpg|jpeg|png|gif|webp)/, '_300x300$&') : 
-                  (product.featured_image ? 
-                    product.featured_image.replace(/\.(jpg|jpeg|png|gif|webp)/, '_300x300$&') : 
-                    '');
-                
-                return `<div class="product-result-variant" 
-                   data-product-id="${product.id}" 
-                   data-variant-id="${variant.id}" 
-                   data-product-title="${product.title}" 
-                   data-variant-title="${variant.title}"
-                   data-variant-sku="${variant.sku || 'N/A'}"
-                   data-variant-price="${variant.price || '0'}"
-                   data-variant-image="${variant.image || product.featured_image || ''}"
-                   title="Click to select: ${variant.title} | SKU: ${variant.sku || 'N/A'} | Price: ${variant.price ? '$' + (variant.price/100).toFixed(2) : 'N/A'}">
-                  <div class="variant-image-container">
-                    ${imageUrl ? `<img src="${imageUrl}" alt="${variant.title}" class="variant-image" loading="lazy">` : '<div class="variant-image-placeholder">No Image</div>'}
-                  </div>
-                  <div class="variant-info">
-                    <div class="variant-name">${variant.title}</div>
-                    <div class="variant-details">
-                      <span class="variant-sku">SKU: ${variant.sku || 'N/A'}</span>
-                      ${variant.price ? `<span class="variant-price">$${(variant.price/100).toFixed(2)}</span>` : ''}
-                    </div>
-                    ${!variant.available ? '<div class="variant-unavailable">Out of Stock</div>' : ''}
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>
-          `;
-          results.appendChild(productDiv);
-        });
-
-        // Add click handlers to variants
-        const variantElements = results.querySelectorAll('.product-result-variant');
-        console.log(`Adding click handlers to ${variantElements.length} variants`);
-        
-        variantElements.forEach((variant, index) => {
-          console.log(`Setting up variant ${index + 1}:`, variant.dataset);
-          
-          variant.addEventListener('click', function(e) {
-            console.log('Variant clicked:', this.dataset);
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Add visual feedback
-            this.style.background = 'rgba(var(--color-accent), 0.4)';
-            
-            selectProduct(
-              this.dataset.productId,
-              this.dataset.variantId,
-              this.dataset.productTitle,
-              this.dataset.variantTitle,
-              this.dataset.variantSku,
-              this.dataset.variantPrice,
-              this.dataset.variantImage
-            );
-          });
-          
-          // Also add keyboard support
-          variant.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              this.click();
-            }
-          });
-          
-          // Make it focusable
-          variant.setAttribute('tabindex', '0');
-        });
-
-        results.style.display = 'block';
-      }
-
-      function selectProduct(productId, variantId, productTitle, variantTitle, variantSku, variantPrice, variantImage) {
-        console.log('=== SELECT PRODUCT CALLED ===');
-        console.log('Parameters:', { productId, variantId, productTitle, variantTitle, variantSku, variantPrice, variantImage });
-        
-        // Create comprehensive product data object
-        const productData = {
-          product_id: productId,
-          variant_id: variantId,
-          product_name: productTitle,
-          variant_name: variantTitle,
-          sku: variantSku || 'N/A',
-          price: variantPrice || '0',
-          image: variantImage || '',
-          display_text: `${productTitle} - ${variantTitle} (SKU: ${variantSku || 'N/A'})`
-        };
-        
-        console.log('Product data object:', productData);
-        
-        // Store as JSON string for form submission
-        hiddenInput.value = JSON.stringify(productData);
-        console.log('Hidden input value set to:', hiddenInput.value);
-        
-        // Update display
-        console.log('Updating display elements...');
-        const titleElement = selectedProduct.querySelector('.selected-product-title');
-        const variantElement = selectedProduct.querySelector('.selected-product-variant');
-        
-        if (titleElement) {
-          titleElement.textContent = productTitle;
-          console.log('Title updated');
-        } else {
-          console.error('Title element not found');
-        }
-        
-        if (variantElement) {
-          const imageUrl = variantImage ? variantImage.replace(/\.(jpg|jpeg|png|gif|webp)/, '_150x150$&') : '';
-          variantElement.innerHTML = `
-            <div class="selected-product-content">
-              ${imageUrl ? `<img src="${imageUrl}" alt="${variantTitle}" class="selected-product-image" loading="lazy">` : ''}
-              <div class="selected-product-details">
-                <div class="selected-variant-name">${variantTitle}</div>
-                <div class="selected-product-sku">SKU: ${variantSku || 'N/A'}</div>
-                ${variantPrice && variantPrice !== '0' ? `<div class="selected-product-price">$${(variantPrice/100).toFixed(2)}</div>` : ''}
-              </div>
-            </div>
-          `;
-          console.log('Variant element updated');
-        } else {
-          console.error('Variant element not found');
-        }
-        
-        selectedProduct.style.display = 'flex';
-        console.log('Selected product display set to flex');
-        
-        input.value = productData.display_text;
-        console.log('Input value set to:', input.value);
-        
-        hideResults();
-        console.log('Results hidden');
-        
-        console.log('=== PRODUCT SELECTION COMPLETE ===');
-      }
-
-      function clearSelection() {
-        hiddenInput.value = '';
-        selectedProduct.style.display = 'none';
-        input.value = '';
-        input.focus();
-      }
-
-      function hideResults() {
-        results.style.display = 'none';
-      }
-    }
-
   });
 </script>
 

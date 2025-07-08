@@ -152,74 +152,80 @@ export default async function handler(req, res) {
 
 function formatEmailHTML(contact, config) {
   const timestamp = contact.timestamp || new Date().toISOString();
-  
-  return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  let htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 5px;">
       <h2 style="color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">
         New ${config.name} Form Submission
       </h2>
-      
       <p style="color: #666; font-size: 14px;">
         <strong>Submitted:</strong> ${new Date(timestamp).toLocaleString()}
       </p>
-      
-      <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
+
+      <h3 style="color: #333; border-top: 2px solid #eee; padding-top: 20px; margin-top: 20px;">Customer Details</h3>
+      <div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
         ${Object.entries(contact)
-          .filter(([key]) => !['timestamp', 'subject'].includes(key))
-          .map(([key, value]) => {
-            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-            
-            // Handle product data specially
-            if (typeof value === 'string' && value.startsWith('{') && value.includes('product_id')) {
-              try {
-                const productData = JSON.parse(value);
-                return `
-                  <div style="margin-bottom: 15px;">
-                    <strong style="color: #333; display: inline-block; min-width: 120px;">
-                      ${label}:
-                    </strong>
-                    <div style="color: #666; margin-left: 120px; margin-top: 5px;">
-                      <div style="background: #fff; padding: 10px; border-radius: 3px; border-left: 3px solid #007cba;">
-                        <strong>${productData.product_name}</strong><br>
-                        <span style="color: #666;">Variant: ${productData.variant_name}</span><br>
-                        <span style="color: #666; font-family: monospace;">SKU: ${productData.sku}</span><br>
-                        ${productData.price && productData.price !== '0' ? `<span style="color: #007cba; font-weight: bold;">Price: $${(productData.price/100).toFixed(2)}</span><br>` : ''}
-                        <span style="color: #999; font-size: 12px;">Product ID: ${productData.product_id} | Variant ID: ${productData.variant_id}</span>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              } catch (e) {
-                // If parsing fails, fall back to regular display
-                return `
-                  <div style="margin-bottom: 15px;">
-                    <strong style="color: #333; display: inline-block; min-width: 120px;">
-                      ${label}:
-                    </strong>
-                    <span style="color: #666; white-space: pre-wrap;">${value}</span>
-                  </div>
-                `;
-              }
-            } else {
-              // Regular field display
-              const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
-              
-              return `
-                <div style="margin-bottom: 15px;">
-                  <strong style="color: #333; display: inline-block; min-width: 120px;">
-                    ${label}:
-                  </strong>
-                  <span style="color: #666; white-space: pre-wrap;">${displayValue}</span>
-                </div>
-              `;
-            }
-          })
-          .join('')}
+          .filter(([key]) => !['timestamp', 'subject', 'items'].includes(key)) // Filter out items array here
+          .map(([key, value]) => `<p style="margin: 5px 0;"><strong>${key.replace(/_/g, ' ').replace(/^./, str => str.toUpperCase())}:</strong> ${value}</p>`)
+          .join('')
+        }
       </div>
       
+      <h3 style="color: #333; border-top: 2px solid #eee; padding-top: 20px; margin-top: 20px;">Quote Items</h3>
+  `;
+
+  if (contact.items && contact.items.length > 0) {
+    htmlBody += `
+      <table style="width: 100%; border-collapse: collapse; margin-top: 10px;" border="1">
+        <thead style="background-color: #f2f2f2;">
+          <tr>
+            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Item</th>
+            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Dimensions</th>
+            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Fabric</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    contact.items.forEach(item => {
+      const fabricData = item.fabric && typeof item.fabric === 'string' && item.fabric.startsWith('{') 
+        ? JSON.parse(item.fabric) 
+        : { product_name: 'N/A', variant_name: '', sku: '', image: '' };
+      
+      htmlBody += `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.title || 'N/A'}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.width || '?'} in. W x ${item.height || '?'} in. H</td>
+          <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+            <table cellpadding="0" cellspacing="0" border="0" style="width: 100%;">
+              <tr>
+                <td style="width: 60px; padding-right: 10px; vertical-align: top;">
+                  <img src="${fabricData.image}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                </td>
+                <td style="vertical-align: top;">
+                  <strong>${fabricData.product_name}</strong><br>
+                  <small style="color: #555;">${fabricData.variant_name} (SKU: ${fabricData.sku})</small>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      `;
+    });
+
+    htmlBody += `
+        </tbody>
+      </table>
+    `;
+  } else {
+    htmlBody += "<p>No line items were submitted.</p>";
+  }
+
+  htmlBody += `
       <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
         This email was sent from your website contact form.
       </p>
     </div>
   `;
+
+  return htmlBody;
 } 
