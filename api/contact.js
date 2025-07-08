@@ -102,16 +102,13 @@ export default async function handler(req, res) {
     let email = 'zvisells@gmail.com';
     console.log('=== EMAIL SEARCH DEBUG ===');
     console.log('HARDCODED EMAIL FOR TESTING:', email);
+    console.log('Email value check:', email);
+    console.log('Email is truthy:', !!email);
+    console.log('Email type:', typeof email);
     console.log('========================');
     
-    // Validate required fields
-    if (!email) {
-      return res.status(400).json({ 
-        error: 'Email is required',
-        availableFields: Object.keys(formData),
-        formData: formData
-      });
-    }
+    // Skip email validation since we're hardcoding it
+    console.log('✅ SKIPPING EMAIL VALIDATION - USING HARDCODED EMAIL');
     
     // Add email to form data for consistency
     formData.email = email;
