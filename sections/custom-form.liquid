@@ -478,16 +478,40 @@
       console.log('Form submitting to:', form.action);
       console.log('Form action URL:', form.action);
       
+      // Prevent double submission
+      if (submitButton && submitButton.disabled) {
+        console.log('Form already submitting, ignoring duplicate submission');
+        return;
+      }
+      
+      // Disable submit button to prevent double submission
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+      }
+      
       // Check if webhook URL is set
       if (!form.action || form.action === window.location.href || form.action.includes('/contact') && !form.action.includes('vercel.app')) {
         console.error('No webhook URL configured!');
         alert('Form is not configured with a webhook URL. Please set the webhook URL in the theme customizer.');
+        
+        // Re-enable submit button
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit';
+        }
         return;
       }
       
       // Validate form
       if (!validateForm()) {
         console.error('Form validation failed');
+        
+        // Re-enable submit button
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit';
+        }
         return;
       }
       
@@ -549,15 +573,52 @@
         return response.json();
       })
       .then(data => {
+        console.log('=== SUCCESS RESPONSE ===');
         console.log('Response data:', data);
         console.log('Form submission successful!');
+        console.log('=======================');
+        
+        // Re-enable submit button
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit';
+        }
+        
+        // Show success message
         alert('Form submitted successfully!');
+        
+        // Reset form
         form.reset();
+        
+        // Clear any selected products
+        form.querySelectorAll('.custom-form-selected-product').forEach(selected => {
+          selected.style.display = 'none';
+        });
+        
+        // Re-enable checkboxes that were disabled
+        form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.disabled = false;
+        });
+        
+        console.log('Form reset and cleanup complete');
       })
       .catch(error => {
         console.error('=== FETCH ERROR DEBUG ===');
         console.error('Fetch error:', error);
         console.error('Error message:', error.message);
+        console.error('=========================');
+        
+        // Re-enable submit button
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit';
+        }
+        
+        // Re-enable checkboxes that were disabled
+        form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.disabled = false;
+        });
+        
         alert('Error submitting form. Please try again. Error: ' + error.message);
       });
     });
