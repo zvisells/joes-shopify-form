@@ -23,13 +23,15 @@ export default async function handler(req, res) {
 
   try {
     // Debug everything about the request
-    console.log('=== REQUEST DEBUG v2 ===');
+    console.log('=== REQUEST DEBUG v3 ===');
     console.log('Method:', req.method);
     console.log('Headers:', JSON.stringify(req.headers, null, 2));
     console.log('Content-Type:', req.headers['content-type']);
     console.log('Body type:', typeof req.body);
     console.log('Body:', JSON.stringify(req.body, null, 2));
     console.log('Body keys:', req.body ? Object.keys(req.body) : 'undefined');
+    console.log('Body length:', req.body ? JSON.stringify(req.body).length : 'undefined');
+    console.log('Raw body:', req.body);
     console.log('===================');
     
     // Parse JSON data
@@ -37,13 +39,17 @@ export default async function handler(req, res) {
     
     // Validate req.body early to avoid accessing undefined properties
     if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
-      console.error('Empty or invalid request body');
+      console.error('❌ VALIDATION FAILED: Empty or invalid request body');
+      console.error('Body value:', req.body);
+      console.error('Body type:', typeof req.body);
+      console.error('Body keys:', req.body ? Object.keys(req.body) : 'no keys');
       return res.status(400).json({ 
         error: 'Empty or invalid request body',
         debug: { 
           body: req.body, 
           contentType: req.headers['content-type'],
-          bodyType: typeof req.body
+          bodyType: typeof req.body,
+          bodyKeys: req.body ? Object.keys(req.body) : 'no keys'
         }
       });
     }
@@ -51,20 +57,25 @@ export default async function handler(req, res) {
     // Handle JSON data
     if (typeof req.body === 'object' && req.body !== null) {
       jsonData = req.body;
-      console.log('Using parsed JSON object:', jsonData);
+      console.log('✅ Using parsed JSON object:', jsonData);
     } else if (typeof req.body === 'string') {
       try {
         jsonData = JSON.parse(req.body);
-        console.log('Parsed JSON from string:', jsonData);
+        console.log('✅ Parsed JSON from string:', jsonData);
       } catch (e) {
-        console.error('Failed to parse JSON:', e);
+        console.error('❌ JSON PARSE ERROR:', e);
+        console.error('Raw body that failed:', req.body);
         return res.status(400).json({ 
           error: 'Invalid JSON format',
           bodyType: typeof req.body,
-          body: req.body
+          body: req.body,
+          parseError: e.message
         });
       }
     } else {
+      console.error('❌ INVALID BODY FORMAT');
+      console.error('Body type:', typeof req.body);
+      console.error('Body value:', req.body);
       return res.status(400).json({ 
         error: 'Invalid body format',
         bodyType: typeof req.body,
@@ -79,9 +90,12 @@ export default async function handler(req, res) {
     
     console.log('=== FORM DATA DEBUG ===');
     console.log('jsonData:', JSON.stringify(jsonData, null, 2));
+    console.log('jsonData.data exists:', !!jsonData.data);
+    console.log('jsonData.data type:', typeof jsonData.data);
     console.log('Extracted form data:', JSON.stringify(formData, null, 2));
     console.log('All form fields:', Object.keys(formData));
     console.log('Form data object keys:', formData ? Object.keys(formData) : 'undefined');
+    console.log('Form data is empty:', Object.keys(formData).length === 0);
     console.log('========================');
     
     // TEMPORARILY HARDCODE EMAIL FOR TESTING
