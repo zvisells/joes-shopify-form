@@ -319,100 +319,133 @@
     border: 0.1rem solid rgba(var(--color-foreground), 0.2);
     border-top: none;
     border-radius: 0 0 var(--border-radius) var(--border-radius);
-    max-height: 20rem;
+    max-height: 40rem;
     overflow-y: auto;
     z-index: 10;
+    box-shadow: 0 4px 12px rgba(var(--color-foreground), 0.1);
   }
 
   .custom-form-product-result {
-    padding: 1rem;
+    padding: 1.5rem;
     border-bottom: 0.1rem solid rgba(var(--color-foreground), 0.1);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-
-  .custom-form-product-result:hover {
-    background: rgba(var(--color-accent), 0.1);
   }
 
   .custom-form-product-result:last-child {
     border-bottom: none;
   }
 
+  .product-result-header {
+    margin-bottom: 1rem;
+  }
+
   .product-result-title {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
     color: rgb(var(--color-foreground));
   }
 
+  .product-result-type {
+    font-size: 1.1rem;
+    color: rgba(var(--color-foreground), 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
   .product-result-variants {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
   }
 
   .product-result-variant {
-    padding: 0.75rem;
-    background: rgba(var(--color-foreground), 0.1);
-    border-radius: calc(var(--border-radius) / 2);
-    font-size: 1.2rem;
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(var(--color-background));
+    border: 1px solid rgba(var(--color-foreground), 0.15);
+    border-radius: var(--border-radius);
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 1px solid rgba(var(--color-foreground), 0.1);
-    display: block;
-    margin-bottom: 0.5rem;
     position: relative;
     user-select: none;
   }
 
   .product-result-variant:hover {
-    background: rgba(var(--color-accent), 0.2);
-    border-color: rgba(var(--color-accent), 0.3);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(var(--color-accent), 0.1);
+    border-color: rgba(var(--color-accent), 0.4);
+    box-shadow: 0 4px 12px rgba(var(--color-accent), 0.15);
+    transform: translateY(-2px);
   }
 
   .product-result-variant:active {
     transform: translateY(0);
-    background: rgba(var(--color-accent), 0.3);
+    box-shadow: 0 2px 6px rgba(var(--color-accent), 0.2);
   }
 
-  .product-result-variant::before {
-    content: "Click to select";
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    font-size: 0.9rem;
-    color: rgba(var(--color-foreground), 0.5);
-    opacity: 0;
-    transition: opacity 0.2s ease;
+  .variant-image-container {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    border-radius: calc(var(--border-radius) / 2);
+    overflow: hidden;
+    background: rgba(var(--color-foreground), 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .product-result-variant:hover::before {
-    opacity: 1;
+  .variant-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .variant-image-placeholder {
+    font-size: 1rem;
+    color: rgba(var(--color-foreground), 0.4);
+    text-align: center;
+  }
+
+  .variant-info {
+    flex: 1;
+    min-width: 0;
   }
 
   .variant-name {
     font-weight: 500;
-    margin-bottom: 0.25rem;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
     color: rgb(var(--color-foreground));
+    line-height: 1.2;
   }
 
   .variant-details {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     font-size: 1.1rem;
     color: rgba(var(--color-foreground), 0.7);
+    margin-bottom: 0.25rem;
   }
 
   .variant-sku {
     font-family: monospace;
     font-size: 1rem;
+    background: rgba(var(--color-foreground), 0.08);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
   }
 
   .variant-price {
-    font-weight: 500;
+    font-weight: 600;
     color: rgb(var(--color-accent));
+    font-size: 1.2rem;
+  }
+
+  .variant-unavailable {
+    font-size: 1rem;
+    color: #dc3545;
+    font-weight: 500;
   }
 
   .custom-form-selected-product {
@@ -453,6 +486,31 @@
     font-weight: 500;
     color: rgb(var(--color-accent));
     margin-top: 0.25rem;
+  }
+
+  .selected-product-content {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .selected-product-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: calc(var(--border-radius) / 2);
+    flex-shrink: 0;
+  }
+
+  .selected-product-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .selected-variant-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: rgb(var(--color-foreground));
   }
 
   .clear-selection {
@@ -515,6 +573,34 @@
     
     .custom-form-submit {
       width: 100%;
+    }
+
+    .product-result-variants {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .product-result-variant {
+      padding: 0.75rem;
+      gap: 0.75rem;
+    }
+
+    .variant-image-container {
+      width: 50px;
+      height: 50px;
+    }
+
+    .variant-name {
+      font-size: 1.2rem;
+    }
+
+    .variant-details {
+      font-size: 1rem;
+      gap: 0.75rem;
+    }
+
+    .custom-form-product-results {
+      max-height: 60vh;
     }
   }
 </style>
@@ -809,12 +895,16 @@
                     title: productData.product.title,
                     handle: productData.product.handle,
                     product_type: productData.product.product_type,
+                    featured_image: productData.product.featured_image,
+                    images: productData.product.images,
                     variants: productData.product.variants.map(variant => ({
                       id: variant.id,
                       title: variant.title,
                       sku: variant.sku || 'N/A',
                       price: variant.price ? Math.round(parseFloat(variant.price) * 100) : 0,
-                      available: variant.available
+                      available: variant.available,
+                      featured_image: variant.featured_image,
+                      image: variant.featured_image || productData.product.featured_image
                     }))
                   };
                 })
@@ -863,24 +953,42 @@
           const productDiv = document.createElement('div');
           productDiv.className = 'custom-form-product-result';
           productDiv.innerHTML = `
-            <div class="product-result-title">${product.title}</div>
+            <div class="product-result-header">
+              <div class="product-result-title">${product.title}</div>
+              <div class="product-result-type">${product.product_type || ''}</div>
+            </div>
             <div class="product-result-variants">
               ${product.variants.map((variant, index) => {
                 console.log(`Variant ${index + 1}:`, variant);
-                return `<span class="product-result-variant" 
+                
+                // Create image URL using Shopify's image_url filter pattern
+                const imageUrl = variant.image ? 
+                  variant.image.replace(/\.(jpg|jpeg|png|gif|webp)/, '_300x300$&') : 
+                  (product.featured_image ? 
+                    product.featured_image.replace(/\.(jpg|jpeg|png|gif|webp)/, '_300x300$&') : 
+                    '');
+                
+                return `<div class="product-result-variant" 
                    data-product-id="${product.id}" 
                    data-variant-id="${variant.id}" 
                    data-product-title="${product.title}" 
                    data-variant-title="${variant.title}"
                    data-variant-sku="${variant.sku || 'N/A'}"
                    data-variant-price="${variant.price || '0'}"
+                   data-variant-image="${variant.image || product.featured_image || ''}"
                    title="Click to select: ${variant.title} | SKU: ${variant.sku || 'N/A'} | Price: ${variant.price ? '$' + (variant.price/100).toFixed(2) : 'N/A'}">
-                  <div class="variant-name">${variant.title}</div>
-                  <div class="variant-details">
-                    <span class="variant-sku">SKU: ${variant.sku || 'N/A'}</span>
-                    ${variant.price ? `<span class="variant-price">$${(variant.price/100).toFixed(2)}</span>` : ''}
+                  <div class="variant-image-container">
+                    ${imageUrl ? `<img src="${imageUrl}" alt="${variant.title}" class="variant-image" loading="lazy">` : '<div class="variant-image-placeholder">No Image</div>'}
                   </div>
-                </span>`;
+                  <div class="variant-info">
+                    <div class="variant-name">${variant.title}</div>
+                    <div class="variant-details">
+                      <span class="variant-sku">SKU: ${variant.sku || 'N/A'}</span>
+                      ${variant.price ? `<span class="variant-price">$${(variant.price/100).toFixed(2)}</span>` : ''}
+                    </div>
+                    ${!variant.available ? '<div class="variant-unavailable">Out of Stock</div>' : ''}
+                  </div>
+                </div>`;
               }).join('')}
             </div>
           `;
@@ -908,7 +1016,8 @@
               this.dataset.productTitle,
               this.dataset.variantTitle,
               this.dataset.variantSku,
-              this.dataset.variantPrice
+              this.dataset.variantPrice,
+              this.dataset.variantImage
             );
           });
           
@@ -927,9 +1036,9 @@
         results.style.display = 'block';
       }
 
-      function selectProduct(productId, variantId, productTitle, variantTitle, variantSku, variantPrice) {
+      function selectProduct(productId, variantId, productTitle, variantTitle, variantSku, variantPrice, variantImage) {
         console.log('=== SELECT PRODUCT CALLED ===');
-        console.log('Parameters:', { productId, variantId, productTitle, variantTitle, variantSku, variantPrice });
+        console.log('Parameters:', { productId, variantId, productTitle, variantTitle, variantSku, variantPrice, variantImage });
         
         // Create comprehensive product data object
         const productData = {
@@ -939,6 +1048,7 @@
           variant_name: variantTitle,
           sku: variantSku || 'N/A',
           price: variantPrice || '0',
+          image: variantImage || '',
           display_text: `${productTitle} - ${variantTitle} (SKU: ${variantSku || 'N/A'})`
         };
         
@@ -961,10 +1071,16 @@
         }
         
         if (variantElement) {
+          const imageUrl = variantImage ? variantImage.replace(/\.(jpg|jpeg|png|gif|webp)/, '_150x150$&') : '';
           variantElement.innerHTML = `
-            <div>${variantTitle}</div>
-            <div class="selected-product-sku">SKU: ${variantSku || 'N/A'}</div>
-            ${variantPrice && variantPrice !== '0' ? `<div class="selected-product-price">$${(variantPrice/100).toFixed(2)}</div>` : ''}
+            <div class="selected-product-content">
+              ${imageUrl ? `<img src="${imageUrl}" alt="${variantTitle}" class="selected-product-image" loading="lazy">` : ''}
+              <div class="selected-product-details">
+                <div class="selected-variant-name">${variantTitle}</div>
+                <div class="selected-product-sku">SKU: ${variantSku || 'N/A'}</div>
+                ${variantPrice && variantPrice !== '0' ? `<div class="selected-product-price">$${(variantPrice/100).toFixed(2)}</div>` : ''}
+              </div>
+            </div>
           `;
           console.log('Variant element updated');
         } else {
