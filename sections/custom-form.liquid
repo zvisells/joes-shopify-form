@@ -774,72 +774,77 @@
       function searchProducts(query) {
         console.log('Searching for:', query);
         
-        // Use Shopify's predictive search API with proper parameters
-        const searchUrl = `/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10&resources[options][unavailable_products]=last&resources[options][fields]=title,product_type,variants.title,variants.sku,variants.price,variants.available,variants.id`;
+        // Use Shopify's basic predictive search API (without fields parameter)
+        const searchUrl = `/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10&resources[options][unavailable_products]=last`;
         
         fetch(searchUrl)
           .then(response => response.json())
           .then(data => {
             console.log('Predictive search API response:', data);
-            let products = data.resources.results.products || [];
             
+            if (!data.resources || !data.resources.results || !data.resources.results.products) {
+              console.log('No products found in response');
+              hideResults();
+              return;
+            }
+            
+            let products = data.resources.results.products;
             console.log('Raw products from API:', products);
             
-            // If products don't have variants, fetch them individually
-            if (products.length > 0 && (!products[0].variants || products[0].variants.length === 0)) {
-              console.log('Products missing variants, fetching individual product data...');
-              
-              const productPromises = products.map(product => 
-                fetch(`/products/${product.handle}.json`)
-                  .then(response => response.json())
-                  .then(productData => {
-                    console.log(`Fetched details for ${product.handle}:`, productData);
-                    return {
-                      id: productData.product.id,
-                      title: productData.product.title,
-                      handle: productData.product.handle,
-                      product_type: productData.product.product_type,
-                      variants: productData.product.variants.map(variant => ({
-                        id: variant.id,
-                        title: variant.title,
-                        sku: variant.sku || 'N/A',
-                        price: variant.price ? Math.round(parseFloat(variant.price) * 100) : 0,
-                        available: variant.available
-                      }))
-                    };
-                  })
-                  .catch(err => {
-                    console.error(`Error fetching ${product.handle}:`, err);
-                    return {
-                      id: product.id,
-                      title: product.title,
-                      handle: product.handle,
-                      variants: [{
-                        id: `${product.id}-default`,
-                        title: 'Default',
-                        sku: 'N/A',
-                        price: 0,
-                        available: true
-                      }]
-                    };
-                  })
-              );
-              
-              Promise.all(productPromises)
-                .then(detailedProducts => {
-                  console.log('All detailed products:', detailedProducts);
-                  currentProducts = detailedProducts;
-                  displayResults(detailedProducts);
-                });
-            } else {
-              // Products already have variants, use them directly
-              console.log('Products have variants, using directly');
-              currentProducts = products;
-              displayResults(products);
-            }
+            // Always fetch individual product details to get complete variant data
+            console.log('Fetching complete product details for all products...');
+            
+            const productPromises = products.map(product => 
+              fetch(`/products/${product.handle}.json`)
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                  }
+                  return response.json();
+                })
+                .then(productData => {
+                  console.log(`✅ Fetched details for ${product.handle}:`, productData.product.variants.length, 'variants');
+                  return {
+                    id: productData.product.id,
+                    title: productData.product.title,
+                    handle: productData.product.handle,
+                    product_type: productData.product.product_type,
+                    variants: productData.product.variants.map(variant => ({
+                      id: variant.id,
+                      title: variant.title,
+                      sku: variant.sku || 'N/A',
+                      price: variant.price ? Math.round(parseFloat(variant.price) * 100) : 0,
+                      available: variant.available
+                    }))
+                  };
+                })
+                .catch(err => {
+                  console.error(`❌ Error fetching ${product.handle}:`, err);
+                  // Create a fallback product with basic info
+                  return {
+                    id: product.id,
+                    title: product.title,
+                    handle: product.handle,
+                    variants: [{
+                      id: `${product.id}-default`,
+                      title: 'Default',
+                      sku: 'N/A',
+                      price: 0,
+                      available: true
+                    }]
+                  };
+                })
+            );
+            
+            Promise.all(productPromises)
+              .then(detailedProducts => {
+                console.log('🎉 All detailed products ready:', detailedProducts);
+                currentProducts = detailedProducts.filter(p => p.variants.length > 0);
+                displayResults(currentProducts);
+              });
           })
           .catch(error => {
-            console.error('Predictive search error:', error);
+            console.error('❌ Predictive search error:', error);
             hideResults();
           });
       }
