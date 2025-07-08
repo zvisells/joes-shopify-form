@@ -352,16 +352,43 @@
   }
 
   .product-result-variant {
-    padding: 0.25rem 0.5rem;
+    padding: 0.75rem;
     background: rgba(var(--color-foreground), 0.1);
     border-radius: calc(var(--border-radius) / 2);
     font-size: 1.2rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    border: 1px solid rgba(var(--color-foreground), 0.1);
+    display: block;
+    margin-bottom: 0.5rem;
   }
 
   .product-result-variant:hover {
     background: rgba(var(--color-accent), 0.2);
+    border-color: rgba(var(--color-accent), 0.3);
+  }
+
+  .variant-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: rgb(var(--color-foreground));
+  }
+
+  .variant-details {
+    display: flex;
+    gap: 1rem;
+    font-size: 1.1rem;
+    color: rgba(var(--color-foreground), 0.7);
+  }
+
+  .variant-sku {
+    font-family: monospace;
+    font-size: 1rem;
+  }
+
+  .variant-price {
+    font-weight: 500;
+    color: rgb(var(--color-accent));
   }
 
   .custom-form-selected-product {
@@ -389,6 +416,19 @@
   .selected-product-variant {
     font-size: 1.2rem;
     color: rgba(var(--color-foreground), 0.7);
+  }
+
+  .selected-product-sku {
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: rgba(var(--color-foreground), 0.6);
+    margin-top: 0.25rem;
+  }
+
+  .selected-product-price {
+    font-weight: 500;
+    color: rgb(var(--color-accent));
+    margin-top: 0.25rem;
   }
 
   .clear-selection {
@@ -708,16 +748,64 @@
       });
 
       function searchProducts(query) {
-        fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10`)
-          .then(response => response.json())
-          .then(data => {
-            currentProducts = data.resources.results.products || [];
-            displayResults(currentProducts);
-          })
-          .catch(error => {
-            console.error('Product search error:', error);
-            hideResults();
+        // Use both suggest API and products API to get complete data including SKU
+        Promise.all([
+          fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10`),
+          fetch(`/search?q=${encodeURIComponent(query)}&type=product&options[unavailable_products]=last&limit=10`)
+        ])
+        .then(([suggestResponse, searchResponse]) => {
+          return Promise.all([suggestResponse.json(), searchResponse.text()]);
+        })
+        .then(([suggestData, searchHtml]) => {
+          let products = suggestData.resources.results.products || [];
+          
+          // Parse the HTML search results to extract SKU data
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(searchHtml, 'text/html');
+          const productElements = doc.querySelectorAll('[data-product-id]');
+          
+          // Create a map of product IDs to additional data
+          const productDataMap = new Map();
+          productElements.forEach(element => {
+            const productId = element.dataset.productId;
+            const skuElements = element.querySelectorAll('[data-variant-id]');
+            
+            skuElements.forEach(skuElement => {
+              const variantId = skuElement.dataset.variantId;
+              const sku = skuElement.dataset.sku || skuElement.querySelector('.variant-sku')?.textContent?.trim();
+              
+              if (sku) {
+                productDataMap.set(`${productId}-${variantId}`, { sku });
+              }
+            });
           });
+          
+          // Enhance products with SKU data
+          products = products.map(product => ({
+            ...product,
+            variants: product.variants.map(variant => ({
+              ...variant,
+              sku: productDataMap.get(`${product.id}-${variant.id}`)?.sku || variant.sku || 'N/A'
+            }))
+          }));
+          
+          currentProducts = products;
+          displayResults(currentProducts);
+        })
+        .catch(error => {
+          console.error('Product search error:', error);
+          // Fallback to simple suggest API
+          fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10`)
+            .then(response => response.json())
+            .then(data => {
+              currentProducts = data.resources.results.products || [];
+              displayResults(currentProducts);
+            })
+            .catch(fallbackError => {
+              console.error('Fallback product search error:', fallbackError);
+              hideResults();
+            });
+        });
       }
 
       function displayResults(products) {
@@ -735,8 +823,19 @@
             <div class="product-result-title">${product.title}</div>
             <div class="product-result-variants">
               ${product.variants.map(variant => 
-                `<span class="product-result-variant" data-product-id="${product.id}" data-variant-id="${variant.id}" data-product-title="${product.title}" data-variant-title="${variant.title}">
-                  ${variant.title}
+                `<span class="product-result-variant" 
+                   data-product-id="${product.id}" 
+                   data-variant-id="${variant.id}" 
+                   data-product-title="${product.title}" 
+                   data-variant-title="${variant.title}"
+                   data-variant-sku="${variant.sku || 'N/A'}"
+                   data-variant-price="${variant.price || '0'}"
+                   title="SKU: ${variant.sku || 'N/A'} | Price: ${variant.price ? '$' + (variant.price/100).toFixed(2) : 'N/A'}">
+                  <div class="variant-name">${variant.title}</div>
+                  <div class="variant-details">
+                    <span class="variant-sku">SKU: ${variant.sku || 'N/A'}</span>
+                    ${variant.price ? `<span class="variant-price">$${(variant.price/100).toFixed(2)}</span>` : ''}
+                  </div>
                 </span>`
               ).join('')}
             </div>
@@ -751,7 +850,9 @@
               this.dataset.productId,
               this.dataset.variantId,
               this.dataset.productTitle,
-              this.dataset.variantTitle
+              this.dataset.variantTitle,
+              this.dataset.variantSku,
+              this.dataset.variantPrice
             );
           });
         });
@@ -759,18 +860,34 @@
         results.style.display = 'block';
       }
 
-      function selectProduct(productId, variantId, productTitle, variantTitle) {
-        // Use simple text format instead of JSON
-        const productData = `${productTitle} - ${variantTitle} (ID: ${productId}/${variantId})`;
+      function selectProduct(productId, variantId, productTitle, variantTitle, variantSku, variantPrice) {
+        // Create comprehensive product data object
+        const productData = {
+          product_id: productId,
+          variant_id: variantId,
+          product_name: productTitle,
+          variant_name: variantTitle,
+          sku: variantSku || 'N/A',
+          price: variantPrice || '0',
+          display_text: `${productTitle} - ${variantTitle} (SKU: ${variantSku || 'N/A'})`
+        };
         
-        hiddenInput.value = productData;
+        // Store as JSON string for form submission
+        hiddenInput.value = JSON.stringify(productData);
         
+        // Update display
         selectedProduct.querySelector('.selected-product-title').textContent = productTitle;
-        selectedProduct.querySelector('.selected-product-variant').textContent = variantTitle;
+        selectedProduct.querySelector('.selected-product-variant').innerHTML = `
+          <div>${variantTitle}</div>
+          <div class="selected-product-sku">SKU: ${variantSku || 'N/A'}</div>
+          ${variantPrice && variantPrice !== '0' ? `<div class="selected-product-price">$${(variantPrice/100).toFixed(2)}</div>` : ''}
+        `;
         selectedProduct.style.display = 'flex';
         
-        input.value = `${productTitle} - ${variantTitle}`;
+        input.value = productData.display_text;
         hideResults();
+        
+        console.log('Selected product:', productData);
       }
 
       function clearSelection() {

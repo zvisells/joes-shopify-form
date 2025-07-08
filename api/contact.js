@@ -168,16 +168,51 @@ function formatEmailHTML(contact, config) {
           .filter(([key]) => !['timestamp', 'subject'].includes(key))
           .map(([key, value]) => {
             const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-            const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
             
-            return `
-              <div style="margin-bottom: 15px;">
-                <strong style="color: #333; display: inline-block; min-width: 120px;">
-                  ${label}:
-                </strong>
-                <span style="color: #666; white-space: pre-wrap;">${displayValue}</span>
-              </div>
-            `;
+            // Handle product data specially
+            if (typeof value === 'string' && value.startsWith('{') && value.includes('product_id')) {
+              try {
+                const productData = JSON.parse(value);
+                return `
+                  <div style="margin-bottom: 15px;">
+                    <strong style="color: #333; display: inline-block; min-width: 120px;">
+                      ${label}:
+                    </strong>
+                    <div style="color: #666; margin-left: 120px; margin-top: 5px;">
+                      <div style="background: #fff; padding: 10px; border-radius: 3px; border-left: 3px solid #007cba;">
+                        <strong>${productData.product_name}</strong><br>
+                        <span style="color: #666;">Variant: ${productData.variant_name}</span><br>
+                        <span style="color: #666; font-family: monospace;">SKU: ${productData.sku}</span><br>
+                        ${productData.price && productData.price !== '0' ? `<span style="color: #007cba; font-weight: bold;">Price: $${(productData.price/100).toFixed(2)}</span><br>` : ''}
+                        <span style="color: #999; font-size: 12px;">Product ID: ${productData.product_id} | Variant ID: ${productData.variant_id}</span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              } catch (e) {
+                // If parsing fails, fall back to regular display
+                return `
+                  <div style="margin-bottom: 15px;">
+                    <strong style="color: #333; display: inline-block; min-width: 120px;">
+                      ${label}:
+                    </strong>
+                    <span style="color: #666; white-space: pre-wrap;">${value}</span>
+                  </div>
+                `;
+              }
+            } else {
+              // Regular field display
+              const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
+              
+              return `
+                <div style="margin-bottom: 15px;">
+                  <strong style="color: #333; display: inline-block; min-width: 120px;">
+                    ${label}:
+                  </strong>
+                  <span style="color: #666; white-space: pre-wrap;">${displayValue}</span>
+                </div>
+              `;
+            }
           })
           .join('')}
       </div>
