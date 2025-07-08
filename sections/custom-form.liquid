@@ -166,7 +166,7 @@
                   </div>
                   <input 
                     type="hidden" 
-                    name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                    name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
                     class="product-data-input"
                   >
                 </div>
@@ -542,9 +542,9 @@
       console.log('=== SHOPIFY FORM DEBUG v3 ===');
       console.log('Form action URL:', form.action);
       console.log('JSON data:', JSON.stringify(jsonData, null, 2));
-      console.log('JSON data keys:', Object.keys(jsonData));
-      console.log('JSON data.data exists:', !!jsonData.data);
-      console.log('JSON data.data keys:', jsonData.data ? Object.keys(jsonData.data) : 'no data');
+              console.log('JSON data keys:', Object.keys(jsonData));
+        console.log('JSON data.data exists:', !!jsonData.data);
+        console.log('JSON data.data keys:', jsonData.data ? Object.keys(jsonData.data) : 'no data');
       console.log('JSON string length:', JSON.stringify(jsonData).length);
       console.log('============================');
       

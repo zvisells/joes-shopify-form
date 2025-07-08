@@ -85,7 +85,7 @@ export default async function handler(req, res) {
 
     console.log('Parsed jsonData:', jsonData);
 
-    // Ensure data exists - handle cases where data isn't defined
+    // Ensure data exists - handle cases where data isn't defined  
     const formData = jsonData.data || (typeof jsonData === 'object' ? jsonData : {});
     
     console.log('=== FORM DATA DEBUG ===');
