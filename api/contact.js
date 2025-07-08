@@ -74,14 +74,14 @@ export default async function handler(req, res) {
 
     console.log('Parsed jsonData:', jsonData);
 
-    // Ensure contact exists - handle cases where contact isn't defined
-    const contact = jsonData.contact || (typeof jsonData === 'object' ? jsonData : {});
+    // Ensure data exists - handle cases where data isn't defined
+    const formData = jsonData.data || (typeof jsonData === 'object' ? jsonData : {});
     
-    console.log('=== CONTACT DATA DEBUG ===');
+    console.log('=== FORM DATA DEBUG ===');
     console.log('jsonData:', JSON.stringify(jsonData, null, 2));
-    console.log('Extracted contact data:', JSON.stringify(contact, null, 2));
-    console.log('All contact fields:', Object.keys(contact));
-    console.log('Contact object keys:', contact ? Object.keys(contact) : 'undefined');
+    console.log('Extracted form data:', JSON.stringify(formData, null, 2));
+    console.log('All form fields:', Object.keys(formData));
+    console.log('Form data object keys:', formData ? Object.keys(formData) : 'undefined');
     console.log('========================');
     
     // TEMPORARILY HARDCODE EMAIL FOR TESTING
@@ -94,16 +94,16 @@ export default async function handler(req, res) {
     if (!email) {
       return res.status(400).json({ 
         error: 'Email is required',
-        availableFields: Object.keys(contact),
-        contactData: contact
+        availableFields: Object.keys(formData),
+        formData: formData
       });
     }
     
-    // Add email to contact object for consistency
-    contact.email = email;
+    // Add email to form data for consistency
+    formData.email = email;
 
     // Prepare email content
-    const emailContent = formatEmailHTML(contact, CONFIG);
+    const emailContent = formatEmailHTML(formData, CONFIG);
     
     // Send via Resend
     const response = await fetch('https://api.resend.com/emails', {
@@ -115,8 +115,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: CONFIG.from,
         to: CONFIG.to,
-        replyTo: contact.email,
-        subject: contact.subject || `New ${CONFIG.name} Form Submission`,
+        replyTo: formData.email,
+        subject: formData.subject || `New ${CONFIG.name} Form Submission`,
         html: emailContent
       })
     });
@@ -144,8 +144,8 @@ export default async function handler(req, res) {
   }
 }
 
-function formatEmailHTML(contact, config) {
-  const timestamp = contact.timestamp || new Date().toISOString();
+function formatEmailHTML(formData, config) {
+  const timestamp = formData.timestamp || new Date().toISOString();
   
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -158,7 +158,7 @@ function formatEmailHTML(contact, config) {
       </p>
       
       <div style="background: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
-        ${Object.entries(contact)
+        ${Object.entries(formData)
           .filter(([key]) => !['timestamp', 'subject'].includes(key))
           .map(([key, value]) => {
             const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());

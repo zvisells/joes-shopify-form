@@ -26,10 +26,10 @@
       novalidate
       onsubmit="console.log('Form submitted via HTML!');"
     >
-      <input type="hidden" name="form_type" value="contact">
-      <input type="hidden" name="utf8" value="✓">
-      <input type="hidden" name="contact[subject]" value="{{ subject_line }}">
-      <input type="hidden" name="contact[timestamp]" value="">
+          <input type="hidden" name="form_type" value="custom_webhook">
+    <input type="hidden" name="utf8" value="✓">
+    <input type="hidden" name="data[subject]" value="{{ subject_line }}">
+    <input type="hidden" name="data[timestamp]" value="">
 
       <div class="custom-form-fields">
         {% for block in section.blocks %}
@@ -46,10 +46,10 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                <input 
-                  type="text" 
-                  id="{{ field_id }}"
-                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                              <input 
+                type="text" 
+                id="{{ field_id }}" 
+                name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
                   placeholder="{{ block.settings.placeholder }}"
                   class="custom-form-input"
                   {% if field_required %}required{% endif %}
@@ -60,10 +60,10 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                <input 
-                  type="email" 
-                  id="{{ field_id }}"
-                  name="contact[{{ block.settings.name | default: 'email' }}]"
+                              <input 
+                type="email" 
+                id="{{ field_id }}" 
+                name="data[{{ block.settings.name | default: 'email' }}]"
                   placeholder="{{ block.settings.placeholder }}"
                   class="custom-form-input"
                   {% if field_required %}required{% endif %}
@@ -74,9 +74,9 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                <textarea 
-                  id="{{ field_id }}"
-                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                              <textarea 
+                id="{{ field_id }}" 
+                name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
                   placeholder="{{ block.settings.placeholder }}"
                   class="custom-form-textarea"
                   rows="{{ block.settings.rows | default: 4 }}"
@@ -88,9 +88,9 @@
                   {{ block.settings.label }}
                   {% if field_required %}<span class="required">*</span>{% endif %}
                 </label>
-                <select 
-                  id="{{ field_id }}"
-                  name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                              <select 
+                id="{{ field_id }}" 
+                name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
                   class="custom-form-select"
                   {% if field_required %}required{% endif %}
                 >
@@ -111,10 +111,10 @@
                   {% for option in options %}
                     {% assign checkbox_id = field_id | append: '-' | append: forloop.index %}
                     <div class="custom-form-checkbox-wrapper">
-                      <input 
-                        type="checkbox" 
-                        id="{{ checkbox_id }}"
-                        name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                                      <input 
+                  type="checkbox" 
+                  id="{{ checkbox_id }}" 
+                  name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
                         value="{{ option | strip }}"
                         class="custom-form-checkbox"
                         data-group="{{ block.settings.name | default: block.settings.label | handleize }}"
@@ -128,10 +128,10 @@
 
               {% when 'boolean' %}
                 <div class="custom-form-boolean-wrapper">
-                  <input 
-                    type="checkbox" 
-                    id="{{ field_id }}"
-                    name="contact[{{ block.settings.name | default: block.settings.label | handleize }}]"
+                                  <input 
+                  type="checkbox" 
+                  id="{{ field_id }}" 
+                  name="data[{{ block.settings.name | default: block.settings.label | handleize }}]"
                     value="true"
                     class="custom-form-checkbox"
                     {% if field_required %}required{% endif %}
@@ -523,20 +523,20 @@
       
       // Convert form to JSON object
       const formData = new FormData(form);
-      const jsonData = { contact: {} };
+      const jsonData = { data: {} };
       
       // Convert FormData to JSON
       for (let [key, value] of formData.entries()) {
-        if (key.startsWith('contact[') && key.endsWith(']')) {
-          const fieldName = key.slice(8, -1); // Remove 'contact[' and ']'
-          jsonData.contact[fieldName] = value;
+        if (key.startsWith('data[') && key.endsWith(']')) {
+          const fieldName = key.slice(5, -1); // Remove 'data[' and ']'
+          jsonData.data[fieldName] = value;
         } else {
           jsonData[key] = value;
         }
       }
       
       // Add timestamp
-      jsonData.contact.timestamp = new Date().toISOString();
+      jsonData.data.timestamp = new Date().toISOString();
       
       // Log form data for debugging
       console.log('=== SHOPIFY FORM DEBUG ===');
@@ -670,7 +670,7 @@
 
       // Create hidden inputs for checkbox groups
       Object.keys(checkboxGroups).forEach(groupName => {
-        const hiddenFieldName = `contact[${groupName}]`;
+        const hiddenFieldName = `data[${groupName}]`;
         const existingHidden = form.querySelector(`input[name="${hiddenFieldName}"][type="hidden"]`);
         
         if (existingHidden) {
@@ -680,7 +680,7 @@
         if (checkboxGroups[groupName].length > 0) {
           const hiddenInput = document.createElement('input');
           hiddenInput.type = 'hidden';
-          hiddenInput.name = hiddenFieldName;
+          hiddenInput.name = `data[${groupName}]`;
           hiddenInput.value = checkboxGroups[groupName].join(', ');
           form.appendChild(hiddenInput);
         }
@@ -696,7 +696,7 @@
 
     function ensureEmailField() {
       // Check if we already have an email field
-      const emailField = form.querySelector('input[name="contact[email]"]');
+      const emailField = form.querySelector('input[name="data[email]"]');
       if (emailField && emailField.value.trim()) {
         return; // Email field exists and has value
       }
@@ -707,7 +707,7 @@
         // Create hidden field with the email value
         const hiddenEmail = document.createElement('input');
         hiddenEmail.type = 'hidden';
-        hiddenEmail.name = 'contact[email]';
+        hiddenEmail.name = 'data[email]';
         hiddenEmail.value = anyEmailInput.value;
         form.appendChild(hiddenEmail);
       }
