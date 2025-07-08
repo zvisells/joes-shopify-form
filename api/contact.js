@@ -93,28 +93,10 @@ export default async function handler(req, res) {
     console.log('Contact object keys:', contact ? Object.keys(contact) : 'undefined');
     console.log('========================');
     
-    // Find email field - check multiple possible names
-    let email = contact.email;
+    // TEMPORARILY HARDCODE EMAIL FOR TESTING
+    let email = 'zvisells@gmail.com';
     console.log('=== EMAIL SEARCH DEBUG ===');
-    console.log('Initial email value:', email);
-    
-    if (!email) {
-      // Check for other possible email field names
-      const emailFields = Object.keys(contact).filter(key => 
-        key.toLowerCase().includes('email') || 
-        key.toLowerCase().includes('e-mail')
-      );
-      console.log('Email fields found:', emailFields);
-      
-      if (emailFields.length > 0) {
-        email = contact[emailFields[0]];
-        console.log('Found email in field:', emailFields[0], 'Value:', email);
-      } else {
-        console.log('No email fields found in contact object');
-      }
-    }
-    
-    console.log('Final email value:', email);
+    console.log('HARDCODED EMAIL FOR TESTING:', email);
     console.log('========================');
     
     // Validate required fields
