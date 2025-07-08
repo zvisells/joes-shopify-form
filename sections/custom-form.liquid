@@ -772,64 +772,107 @@
       });
 
       function searchProducts(query) {
-        // Use both suggest API and products API to get complete data including SKU
-        Promise.all([
-          fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10`),
-          fetch(`/search?q=${encodeURIComponent(query)}&type=product&options[unavailable_products]=last&limit=10`)
-        ])
-        .then(([suggestResponse, searchResponse]) => {
-          return Promise.all([suggestResponse.json(), searchResponse.text()]);
-        })
-        .then(([suggestData, searchHtml]) => {
-          let products = suggestData.resources.results.products || [];
-          
-          // Parse the HTML search results to extract SKU data
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(searchHtml, 'text/html');
-          const productElements = doc.querySelectorAll('[data-product-id]');
-          
-          // Create a map of product IDs to additional data
-          const productDataMap = new Map();
-          productElements.forEach(element => {
-            const productId = element.dataset.productId;
-            const skuElements = element.querySelectorAll('[data-variant-id]');
+        console.log('Searching for:', query);
+        
+        // Use the products.json API to get complete product data with variants
+        fetch(`/products.json?limit=10&q=${encodeURIComponent(query)}`)
+          .then(response => response.json())
+          .then(data => {
+            console.log('Products API response:', data);
+            let products = data.products || [];
             
-            skuElements.forEach(skuElement => {
-              const variantId = skuElement.dataset.variantId;
-              const sku = skuElement.dataset.sku || skuElement.querySelector('.variant-sku')?.textContent?.trim();
-              
-              if (sku) {
-                productDataMap.set(`${productId}-${variantId}`, { sku });
-              }
-            });
+            // Filter products that match the search query
+            products = products.filter(product => 
+              product.title.toLowerCase().includes(query.toLowerCase()) ||
+              product.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())) ||
+              product.product_type.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            console.log('Filtered products:', products);
+            
+            // Transform to match expected format and ensure variants exist
+            products = products.map(product => ({
+              id: product.id,
+              title: product.title,
+              handle: product.handle,
+              product_type: product.product_type,
+              tags: product.tags,
+              variants: product.variants && product.variants.length > 0 ? product.variants.map(variant => ({
+                id: variant.id,
+                title: variant.title,
+                sku: variant.sku || 'N/A',
+                price: variant.price ? Math.round(parseFloat(variant.price) * 100) : 0,
+                available: variant.available,
+                inventory_quantity: variant.inventory_quantity
+              })) : [{
+                id: `${product.id}-default`,
+                title: 'Default',
+                sku: product.variants?.[0]?.sku || 'N/A',
+                price: product.variants?.[0]?.price ? Math.round(parseFloat(product.variants[0].price) * 100) : 0,
+                available: true,
+                inventory_quantity: 0
+              }]
+            }));
+            
+            console.log('Transformed products with variants:', products);
+            currentProducts = products;
+            displayResults(currentProducts);
+          })
+          .catch(error => {
+            console.error('Products API error:', error);
+            
+            // Fallback to suggest API but fetch individual product data
+            fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10`)
+              .then(response => response.json())
+              .then(data => {
+                console.log('Suggest API fallback response:', data);
+                let products = data.resources.results.products || [];
+                
+                // For each product, fetch full details
+                const productPromises = products.map(product => 
+                  fetch(`/products/${product.handle}.json`)
+                    .then(response => response.json())
+                    .then(productData => ({
+                      id: productData.product.id,
+                      title: productData.product.title,
+                      handle: productData.product.handle,
+                      variants: productData.product.variants.map(variant => ({
+                        id: variant.id,
+                        title: variant.title,
+                        sku: variant.sku || 'N/A',
+                        price: variant.price ? Math.round(parseFloat(variant.price) * 100) : 0,
+                        available: variant.available
+                      }))
+                    }))
+                    .catch(err => {
+                      console.error('Error fetching product details:', err);
+                      return {
+                        id: product.id,
+                        title: product.title,
+                        handle: product.handle,
+                        variants: [{
+                          id: `${product.id}-default`,
+                          title: 'Default',
+                          sku: 'N/A',
+                          price: 0,
+                          available: true
+                        }]
+                      };
+                    })
+                );
+                
+                Promise.all(productPromises)
+                  .then(detailedProducts => {
+                    console.log('Detailed products from fallback:', detailedProducts);
+                    currentProducts = detailedProducts;
+                    displayResults(detailedProducts);
+                  });
+              })
+              .catch(fallbackError => {
+                console.error('Fallback product search error:', fallbackError);
+                hideResults();
+              });
           });
-          
-          // Enhance products with SKU data
-          products = products.map(product => ({
-            ...product,
-            variants: product.variants.map(variant => ({
-              ...variant,
-              sku: productDataMap.get(`${product.id}-${variant.id}`)?.sku || variant.sku || 'N/A'
-            }))
-          }));
-          
-          currentProducts = products;
-          displayResults(currentProducts);
-        })
-        .catch(error => {
-          console.error('Product search error:', error);
-          // Fallback to simple suggest API
-          fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=10`)
-            .then(response => response.json())
-            .then(data => {
-              currentProducts = data.resources.results.products || [];
-              displayResults(currentProducts);
-            })
-            .catch(fallbackError => {
-              console.error('Fallback product search error:', fallbackError);
-              hideResults();
-            });
-        });
       }
 
       function displayResults(products) {
