@@ -1,0 +1,1080 @@
+{%- liquid
+  assign menu_items = section.settings.menu.links
+-%}
+
+<div class="header-spacer">
+  <div class="header-spacer__inner"></div>
+</div>
+<header class="header-wrapper color-{{ section.settings.custmenu_color_scheme }}" role="banner">
+  <!-- Row 1: Logo, Search, Icons -->
+  <div class="header-row-1">
+    <div class="header-row-1-content content-width">
+      <!-- Mobile Menu Hamburger Bar -->
+      <button
+        class="mobile-menu-toggle"
+        aria-label="Open menu"
+        aria-controls="mega-menu"
+        aria-expanded="false"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="20" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- Logo -->
+      <div class="header-logo">
+        <a href="{{ routes.root_url }}" class="logo-link">
+          {% if section.settings.logo != blank %}
+            <img src="{{ section.settings.logo | img_url: 'master' }}" alt="{{ shop.name }}" class="logo-image">
+          {% else %}
+            <span class="logo-text">{{ shop.name }}</span>
+          {% endif %}
+        </a>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="header-search" data-mobile>
+        <predictive-search data-loading-text="{{ 'general.search.loading' | t }}">
+          <form action="{{ routes.search_url }}" method="get" role="search" class="search-modal__form">
+            <div class="field">
+              <input
+                class="search__input field__input"
+                id="Search-In-Modal"
+                type="search"
+                name="q"
+                value="{{ search.terms | escape }}"
+                placeholder="Search {{ shop.name }}..."
+                autocomplete="off"
+                aria-label="Search"
+              >
+              <input name="options[prefix]" type="hidden" value="last">
+              <button
+                type="reset"
+                class="reset__button field__button{% if search.terms == blank %} hidden{% endif %}"
+                aria-label="{{ 'general.search.reset' | t }}"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+                  <line x1="1" y1="1" x2="15" y2="15"></line>
+                  <line x1="15" y1="1" x2="1" y2="15"></line>
+                </svg>
+              </button>
+              <button class="search__button field__button" aria-label="{{ 'general.search.search' | t }}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
+              <div class="predictive-search__loading-state">
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  class="spinner"
+                  viewBox="0 0 66 66"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
+                </svg>
+              </div>
+            </div>
+            <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
+          </form>
+        </predictive-search>
+      </div>
+
+      <!-- Icons -->
+      <div class="header-icons">
+        <a href="/pages/help" class="icon-link icon-help" title="Help/Chat">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12" y2="17"></line>
+          </svg>
+          <span class="icon-text">Help</span>
+        </a>
+        <a href="{{ routes.account_login_url }}" class="icon-link icon-account" title="Account">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span class="icon-text">Account</span>
+        </a>
+        <a href="{{ routes.cart_url }}" class="icon-link icon-cart" title="Cart">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span class="icon-text">Cart</span>
+          <span class="cart-count">{{ cart.item_count }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Search (mobile), Mega Menu -->
+  <div class="header-row-2">
+    <nav class="content-width" role="navigation">
+      <ul class="mega-menu" id="mega-menu">
+        <button class="mobile-menu-close" aria-label="Close menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        {% for link in menu_items %}
+          <li class="mega-menu-item">
+            <a
+              href="{{ link.url }}"
+              class="mega-menu-trigger"
+              {% if link.links != blank %}
+                aria-expanded="false"
+                aria-controls="dropdown-{{ forloop.index }}"
+                data-submenu-id="dropdown-{{ forloop.index }}"
+              {% endif %}
+            >
+              {% if link.links != blank %}
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  class="dropdown-arrow"
+                >
+                  <path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              {% endif %}
+              {{ link.title }}
+            </a>
+            {% if link.links != blank %}
+              <div class="mega-menu-dropdown" id="dropdown-{{ forloop.index }}">
+                <ul class="submenu">
+                  {% for child_link in link.links %}
+                    {% comment %}
+                      Assign the submenu image URL if the linked object has one.
+                      We check for a featured_image here, but you could extend this
+                      to check other object types (products, articles, etc.).
+                    {% endcomment %}
+                    {% assign submenu_image = '' %}
+                    {% if child_link.object and child_link.object.featured_image %}
+                      {% assign submenu_image = child_link.object.featured_image | img_url: '32x32' %}
+                    {% endif %}
+
+                    <li class="submenu-item">
+                      <a href="{{ child_link.url }}" class="submenu-link">
+                        {% if submenu_image != blank %}
+                          <img
+                            src="{{ submenu_image }}"
+                            alt="{{ child_link.title }}"
+                            class="submenu-icon"
+                          >
+                        {% else %}
+                          <span class="submenu-icon placeholder-icon"></span>
+                        {% endif %}
+                        {{ child_link.title }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                  <li class="submenu-item shop-all">
+                    <a href="{{ link.url }}" class="shop-all-button">Shop All</a>
+                  </li>
+                </ul>
+              </div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+</header>
+<div class="overlay"></div>
+
+{% style %}
+        /* Full-width header with max-width content */
+        .header-wrapper {
+          width: 100%;
+          background: #fff;
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 1000;
+          transition: transform 0.3s ease-out;
+        }
+
+        .header-spacer {
+          width: 100%;
+          height: 129px;
+          background: transparent;
+        }
+
+        .header-spacer__inner {
+          height: 129px;
+          display: block;
+        }
+
+        .content-width {
+          max-width: var(--page-width);
+          margin: 0 auto;
+          width: 100%;
+          padding: 0 20px;
+        }
+
+        /* Use theme fonts */
+        body, .header-wrapper, .mega-menu-trigger, .submenu-link, .shop-all-button {
+          font-family: var(--font-body-family);
+        }
+
+        .header-logo .logo-text, h2 {
+          font-family: var(--font-heading-family);
+        }
+
+        /* Row 1 */
+        .header-row-1 {
+          background-color: var(--gradient-background);
+        }
+
+        .header-row-1-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 15px 20px;
+          gap: 20px;
+          width: 95%;
+            margin: 0 auto;
+        }
+
+        /* Logo */
+        .header-logo .logo-image {
+          max-height: 25px;
+          border-radius: ;
+        }
+
+        .header-logo a {
+          color: rgba(var(--color-secondary-button-text));
+        }
+
+          .logo-link {
+            display: flex;
+            align-items: center;
+          }
+
+        /* Search Bar */
+        .header-search {
+          flex: 1;
+          position: relative;
+          z-index: 2;
+        }
+
+        .search-modal__form {
+          display: flex;
+          align-items: center;
+        }
+
+        .field {
+          display: flex;
+          width: 100%;
+          max-width: 500px;
+          border-radius: 100px;
+          overflow: hidden;
+          position: relative;
+          background: #fff;
+        }
+
+        .field::after {
+          content: none;
+        }
+
+        .search__input.field__input:focus,
+        .search__input.field__input:not(:placeholder-shown),
+        .search__input.field__input:-webkit-autofill {
+          padding: 12px 16px;
+          border: none;
+          outline: none;
+          box-shadow: none;
+        }
+
+        .search__input {
+          flex: 1;
+          padding: 12px 16px;
+          border: none;
+          outline: none;
+          font-size: 16px;
+          border-radius: 100px 0 0 100px;
+          background: transparent;
+          color: rgb(var(--color-background));
+          z-index: 1;
+        }
+
+        .reset__button.field__button {
+          padding: 12px;
+          color: var(--gradient-background);
+          transition: opacity 0.2s;
+          border: none;
+          cursor: pointer;
+          position: relative;
+          z-index: 2;
+          order: 1;
+        }
+
+        .reset__button.hidden {
+          display: none;
+        }
+
+        .search__button.field__button {
+          border: none;
+          cursor: pointer;
+          border-radius: 0 100px 100px 0;
+          color: var(--gradient-background);
+          transition: opacity 0.2s;
+          position: relative;
+          z-index: 2;
+          order: 2;
+        }
+
+        .search__button:hover {
+          opacity: 0.8;
+        }
+
+        .predictive-search--header {
+          position: absolute;
+          left: 0;
+          right: 0;
+          background: rgba(var(--color-button));
+          border-radius: 25px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          max-height: 600px;
+          overflow-y: hidden;
+          z-index: 1002;
+          display: none;
+          padding-bottom: 0;
+        }
+
+        .predictive-search--header h2,
+        .predictive-search--header .link,
+        .predictive-search--header p {
+          color: rgb(var(--color-background));
+        }
+
+        .predictive-search--header #predictive-search-results li {
+          max-height: 50px;
+          display: flex;
+          align-items: center;
+          overflow: hidden;
+        }
+
+        .predictive-search--header .predictive-search__image {
+          width: 40px;
+          height: 40px;
+          object-fit: cover;
+          margin-right: 10px;
+        }
+
+        .predictive-search__loading-state {
+          text-align: center;
+          padding: 10px;
+        }
+
+    #predictive-search-results {
+    max-height: 600px;
+      overflow: auto;
+  }
+
+  .predictive-search__results-groups-wrapper {
+        max-height: 500px;
+      overflow: auto;
+  }
+
+    .predictive-search__result-inner {
+    overflow-x: hidden;
+      overflow-y: auto;
+      max-height: 500px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+
+        .predictive-search__result-inner::-webkit-scrollbar {
+          height: 8px;
+        }
+
+        .predictive-search__result-inner::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 4px;
+        }
+
+  .predictive-search__item-query-result mark {
+    color: inherit;
+  }
+
+  .predictive-search__item--term {
+border-top: solid 1px rgba(var(--color-background), 0.1);
+        background: inherit;
+    transition: background 0.1s;
+}
+
+    .predictive-search__item--term:hover {
+        background: rgba(var(--color-background), 0.1);
+}
+
+      .predictive-search__item--term:active {
+        background: rgba(var(--color-background), 0.5);
+}
+
+.predictive-search__item--term .icon-arrow {
+color: rgba(var(--color-button-text));
+}
+
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          border: 0;
+        }
+
+        /* Overlay */
+        .overlay {
+         position: fixed !important;
+          inset: 0;                    /* top:0; right:0; bottom:0; left:0 */
+          width: 100vw !important;
+          height: 100vh !important;
+          background: rgba(0, 0, 0, 0.3) !important;
+          z-index: 3 !important;
+          display: none;
+          cursor: default;
+        }
+
+        /* Icons/Secondary Links */
+        .header-icons {
+          display: flex;
+          gap: 15px;
+        }
+
+        .icon-link {
+          display: flex;
+          align-items: center;
+          padding: 8px;
+          border-radius: 6px;
+          text-decoration: none;
+          transition: background-color 0.2s;
+          color: rgba(var(--color-foreground));
+        }
+
+        .icon-text {
+          margin-left: 8px;
+          font-size: 12px;
+          color: rgba(var(--color-foreground));
+        }
+
+        .icon-link:hover {
+          background-color: rgba(var(--color-button), 0.1);
+        }
+
+        .icon-link:active {
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .cart-count {
+          margin-left: 4px;
+          font-size: 14px;
+        }
+
+        /* Row 2 */
+        .header-row-2 {
+          width: 100%;
+          background-color: rgba(var(--color-background), 0.8);
+        }
+
+        /* Megamenu */
+        .mega-menu {
+          display: flex;
+          padding:0px;
+          list-style: none;
+          width: 95%;
+            margin: 0 auto;
+          height: 50px;
+        }
+
+        .mega-menu-item {
+          position: relative;
+          flex: 0 0 auto;
+        }
+
+        .mega-menu-trigger {
+          padding: 0 20px;
+          font-size: 16px;
+          cursor: pointer;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          transition: background-color 0.2s, color 0.2s;
+          color: rgba(var(--color-secondary-button-text));
+          text-decoration: none;
+          flex-direction: row-reverse;
+        }
+
+        .dropdown-arrow {
+          margin-left: 8px;
+          transition: transform 0.2s ease;
+        }
+
+        .mega-menu-item.active .dropdown-arrow {
+          transform: rotate(180deg);
+        }
+
+        .mega-menu-trigger:hover {
+          background: rgba(var(--color-background), 0.5);
+          color: rgba(var(--color-base));
+        }
+
+        .mega-menu-dropdown {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          background: #fff;
+          border-radius: 6px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          padding: 15px;
+          min-width: 200px;
+          z-index: 1002;
+        }
+
+        .mega-menu-item.active .mega-menu-dropdown {
+          display: block;
+        }
+
+        .submenu {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .submenu-item {
+          margin-bottom: 10px;
+        }
+
+        .submenu-link {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          color: #333;
+          padding: 8px;
+          border-radius: 6px;
+          transition: opacity 0.2s;
+        }
+
+        .submenu-link:hover {
+          opacity: 0.8;
+        }
+
+        .submenu-icon {
+          width: 32px;
+          height: 32px;
+          margin-right: 10px;
+          border-radius: 4px;
+        }
+
+        .placeholder-icon {
+          background: #eee;
+        }
+
+        .shop-all-button {
+          display: inline-block;
+          padding: 8px 16px;
+          background: var(--gradient-background);
+          color: var(--color-button-text);
+          text-decoration: none;
+          border-radius: 6px;
+          transition: opacity 0.2s;
+        }
+
+        .shop-all-button:hover {
+          opacity: 0.8;
+        }
+
+        /* Mobile Styles */
+        .mobile-menu-toggle,
+        .mobile-call-button {
+          display: none;
+        }
+
+          .mobile-menu-close {
+            display: none !important;
+          }
+
+      /* ------------------------------ M O B I L E     M E N U ------------------------------- */
+
+        @media (max-width: 768px) {
+          /* Row 1: Hamburger, Logo, Call Button */
+          .header-row-1-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px;
+          }
+
+          .mobile-menu-toggle,
+          .mobile-call-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            padding: 8px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            color:inherit;
+            cursor: pointer;
+          }
+
+          .mobile-call-button {
+            font-size: 20px;
+            text-decoration: none;
+          }
+
+          .header-logo {
+            flex: 1;
+            text-align: center;
+            margin: 0 10px;
+          }
+
+            .logo-link {
+            display: flex;
+            align-items: center;
+              justify-content: center;
+          }
+
+          .header-icons {
+            display: flex;
+          }
+
+
+
+          .icon-cart .icon-text {
+            display: none;
+          }
+
+          .header-row-1-content extra-link {
+           display:;
+          }
+
+          .icon-cart {
+            max-width: 50px;
+          }
+
+          /* Row 2: Search Bar and Megamenu */
+          .header-row-2 {
+            padding: 5px 20px;
+            background: var(--gradient-background);
+          }
+
+          .header-search {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            z-index:5;
+          }
+
+          .field {
+            max-width: 100%;
+          }
+
+            .predictive-search__result-inner {
+    overflow-x: auto;
+      overflow-y: auto;
+      max-height: 100%;
+
+        }
+
+          /* Megamenu: Hidden by default, full-screen when open */
+          .mega-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(var(--color-background));
+            flex-direction: column;
+            padding: 20px;
+            z-index: 10;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          .nav-open .mega-menu {
+            display: flex;
+            transform: none !important;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 100;
+          }
+          .nav-open .header-search {
+            display: none;
+          }
+          .nav-open .overlay {
+            display: block;
+          }
+
+          .mega-menu-item {
+            width: 100%;
+          }
+
+          .mega-menu-trigger {
+            position: relative;
+            padding: 15px 0;
+            height: unset;
+            font-size: 18px;
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+          }
+
+        .dropdown-arrow {
+          margin: 0 10px 0 0;
+        }
+
+          .mega-menu-item.active {
+          background: inherit;
+        }
+
+          .mega-menu-dropdown {
+            display: none;
+            position: static;
+            box-shadow: none;
+            padding: 10px 20px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            margin-bottom: 10px;
+    max-height: 50vh;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+          }
+
+
+          .mega-menu-item.active .mega-menu-dropdown {
+            display: block;
+          }
+
+          .submenu-item {
+            margin-bottom:;
+          }
+
+          .submenu-link {
+            padding: 10px;
+            font-size: 16px;
+          }
+
+          .shop-all-button {
+            width:100%;
+            padding: 16px 16px;
+          }
+
+          .icon-help, .icon-account {
+         display: inherit;
+          }
+
+         .extra-link-wrapper {
+           margin-top:20px;
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                padding: 15px 0;
+                justify-content: space-evenly;
+                border-block-end: solid 0.5px rgba(var(--color-button), 0.2);
+        }
+
+          .icon-link {
+                align-items: center;
+                    justify-content: center;
+            padding: 8px;
+            width: 100%;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            color: rgba(var(--color-foreground));
+          }
+
+
+        .mobile-menu-close {
+                display: flex !important;
+                position: relative;
+                background: none;
+          color:inherit;
+                border: none;
+                cursor: pointer;
+                justify-content: start;
+          padding: 0px;
+          }
+          .header-row-1 .header-search {
+            display: none;
+          }
+        }
+{% endstyle %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const header       = document.querySelector('.header-wrapper');
+  const body         = document.body;
+  const spacer       = document.querySelector('.header-spacer');
+  const toggle       = document.querySelector('.mobile-menu-toggle');
+  const searchInput  = document.querySelector('.search__input');
+  const overlay      = document.querySelector('.overlay');
+  const resultsPanel = document.querySelector('.predictive-search--header');
+  const row1Content  = document.querySelector('.header-row-1-content');
+  const row2         = document.querySelector('.header-row-2');
+  const icons        = row1Content.querySelector('.header-icons');
+  const MOBILE_BP    = 768;
+
+  function debounce(fn, wait) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
+  function setBodyScrolling(enabled) {
+    body.style.overflow = enabled ? '' : 'hidden';
+  }
+
+  function reflowHeader() {
+    const search = document.querySelector('.header-search');
+
+    // ── Move search bar ──
+    if (window.innerWidth < MOBILE_BP) {
+      if (!row2.contains(search)) row2.insertBefore(search, row2.firstChild);
+      header.classList.add('mobile-nav-mobile');
+    } else {
+      if (!row1Content.contains(search)) row1Content.insertBefore(search, icons);
+      header.classList.remove('mobile-nav-mobile','nav-open');
+      setBodyScrolling(true);
+      overlay.style.display = 'none';
+    }
+
+    // ── extra links (Help + Account) ──
+    const menuList = document.querySelector('.mega-menu');
+    const helpIcon = icons.querySelector('.icon-help');
+    const acctIcon = icons.querySelector('.icon-account');
+
+    if (window.innerWidth < MOBILE_BP) {
+      // only once
+      if (!menuList.querySelector('.extra-link-wrapper')) {
+        // clone
+        const helpClone = helpIcon.cloneNode(true);
+        const acctClone = acctIcon.cloneNode(true);
+        // clear any inline style
+        helpClone.removeAttribute('style');
+        acctClone.removeAttribute('style');
+        // hide originals
+        helpIcon.style.display = 'none';
+        acctIcon.style.display = 'none';
+        // wrap both clones
+        const wrapper = document.createElement('div');
+        wrapper.className = 'extra-link-wrapper';
+        wrapper.append(helpClone, acctClone);
+        // inject into menu
+const li = document.createElement('li');
+    li.className = 'mega-menu-item extra-link';
+    li.appendChild(wrapper);
+
+    // ← New insertion point:
+    const closeBtn = menuList.querySelector('.mobile-menu-close');
+    closeBtn.insertAdjacentElement('afterend', li);
+      }
+    } else {
+      // desktop cleanup
+      document.querySelectorAll('.mega-menu-item.extra-link').forEach(li => li.remove());
+      helpIcon.style.display = '';
+      acctIcon.style.display = '';
+    }
+
+    spacer.style.height = `${header.offsetHeight}px`;
+  }
+
+  window.addEventListener('resize', debounce(reflowHeader, 100));
+  reflowHeader();
+
+
+// Hamburger toggle
+toggle.addEventListener('click', () => {
+  const open = header.classList.toggle('nav-open');
+  toggle.setAttribute('aria-expanded', open);
+  overlay.style.display    = open ? 'block' : 'none';
+  closeButton.style.display = open ? 'flex' : 'none';
+
+  // prevent page scroll when open, re-enable when closed
+  setBodyScrolling(!open);
+
+  // refresh swatch counts if needed
+  if (open && typeof refreshSwatchCounts === 'function') {
+    refreshSwatchCounts();
+  }
+});
+
+
+
+
+  // Accordion for megamenu dropdowns
+document.querySelectorAll('.mega-menu-trigger').forEach(trigger => {
+  if (!trigger.hasAttribute('aria-controls')) return;
+
+  trigger.addEventListener('click', e => {
+    e.preventDefault();
+    const parent = trigger.closest('.mega-menu-item');
+    const isActive = parent.classList.contains('active');
+
+    // If already open, just close it and exit
+    if (isActive) {
+      parent.classList.remove('active');
+      trigger.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    // Otherwise, close any other open menus
+    document.querySelectorAll('.mega-menu-item.active').forEach(item => {
+      item.classList.remove('active');
+      const otherTrigger = item.querySelector('.mega-menu-trigger');
+      if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+    });
+
+    // Then open this one
+    parent.classList.add('active');
+    trigger.setAttribute('aria-expanded', 'true');
+
+// ← NEW: if desktop, show overlay
+  if (window.innerWidth >= MOBILE_BP) {
+    overlay.style.display = 'block';
+    setBodyScrolling(false);  // optional: lock the page under your menu
+  }
+    
+    // If you have swatch-count logic, refresh it
+    if (typeof refreshSwatchCounts === 'function') {
+      refreshSwatchCounts();
+    }
+  });
+});
+
+
+  // Predictive search overlay
+  searchInput.addEventListener('focus', () => {
+    header.querySelector('.header-search').classList.add('active');
+    overlay.style.display = 'block';
+    resultsPanel.style.display = 'block';
+  });
+
+  searchInput.addEventListener('blur', () => {
+    header.querySelector('.header-search').classList.remove('active');
+    if (!header.classList.contains('nav-open')) {
+      overlay.style.display = 'none';
+    }
+    setTimeout(() => {
+      if (!searchInput.matches(':focus')) resultsPanel.style.display = 'none';
+    }, 200);
+  });
+
+  // Close menu when overlay is clicked
+  overlay.addEventListener('click', () => {
+    header.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    overlay.style.display = 'none';
+    document.querySelectorAll('.mega-menu-item').forEach(item => {
+      item.classList.remove('active');
+      const trigger = item.querySelector('.mega-menu-trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      setBodyScrolling(true);
+    });
+  });
+
+  const closeButton = document.querySelector('.mobile-menu-close');
+closeButton.addEventListener('click', () => {
+  header.classList.remove('nav-open');
+  toggle.setAttribute('aria-expanded', 'false');
+  overlay.style.display = 'none';
+  document.querySelectorAll('.mega-menu-item').forEach(item => {
+    item.classList.remove('active');
+    const trigger = item.querySelector('.mega-menu-trigger');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    setBodyScrolling(true);
+  });
+});
+
+  // Header scroll hide/show
+  let lastScroll = 0, translateY = 0;
+  function handleScroll() {
+    const current = window.scrollY;
+    const h = header.offsetHeight;
+    if (current > lastScroll) {
+      translateY = Math.min(translateY + (current - lastScroll), h);
+    } else {
+      translateY = Math.max(translateY - (lastScroll - current), 0);
+    }
+    header.style.transform = `translateY(-${translateY}px)`;
+    lastScroll = Math.max(current, 0);
+    spacer.style.height = `${h}px`;
+  }
+
+  window.addEventListener('scroll', () => requestAnimationFrame(handleScroll));
+
+
+  // Scroll detector
+  window.addEventListener('scroll', () => {
+  // 2a) if nav is open, just bail (we’re already preventing scroll)
+  if (header.classList.contains('nav-open')) return;
+
+  // 2b) if the predictive dropdown is visible, hide it
+  if (resultsPanel.style.display === 'block') {
+    resultsPanel.style.display = 'none';
+    overlay.setAttribute('hidden', '');
+    header.querySelector('.header-search').classList.remove('active');
+    // also blur the input so it doesn’t immediately re-open
+    searchInput.blur();
+  }
+});
+
+});
+</script>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo Image"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu DOBBY",
+      "default": "main-menu"
+    },
+    {
+      "type": "color_scheme",
+      "id": "custmenu_color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    }
+  ]
+}
+{% endschema %}
