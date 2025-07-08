@@ -550,37 +550,88 @@
       
       console.log('About to submit to:', form.action);
       
-      // Submit via fetch (POST request with JSON)
-      console.log('=== FETCH REQUEST DEBUG ===');
+      // Submit via XMLHttpRequest (bypassing Shopify's fetch wrapper)
+      console.log('=== XMLHttpRequest DEBUG ===');
       console.log('Sending request to:', form.action);
       console.log('Request method:', 'POST');
       console.log('Request body type:', 'JSON');
       
-      fetch(form.action, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(jsonData),
-        mode: 'cors',
-        credentials: 'omit'
-      })
-      .then(response => {
-        console.log('=== FETCH RESPONSE DEBUG ===');
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        console.log('Response headers:', response.headers);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', form.action, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          console.log('=== XHR RESPONSE DEBUG ===');
+          console.log('Response status:', xhr.status);
+          console.log('Response text:', xhr.responseText);
+          console.log('Response headers:', xhr.getAllResponseHeaders());
+          console.log('==========================');
+          
+          if (xhr.status >= 200 && xhr.status < 300) {
+            // Success
+            let data;
+            try {
+              data = JSON.parse(xhr.responseText);
+            } catch (e) {
+              data = { message: 'Success', response: xhr.responseText };
+            }
+            
+            console.log('=== SUCCESS RESPONSE ===');
+            console.log('Response data:', data);
+            console.log('Form submission successful!');
+            console.log('=======================');
+            
+            // Re-enable submit button
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = 'Submit';
+            }
+            
+            // Show success message
+            alert('Form submitted successfully!');
+            
+            // Reset form
+            form.reset();
+            
+            // Clear any selected products
+            form.querySelectorAll('.custom-form-selected-product').forEach(selected => {
+              selected.style.display = 'none';
+            });
+            
+            // Re-enable checkboxes that were disabled
+            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+              cb.disabled = false;
+            });
+            
+            console.log('Form reset and cleanup complete');
+          } else {
+            // Error
+            console.error('=== XHR ERROR DEBUG ===');
+            console.error('XHR status:', xhr.status);
+            console.error('XHR response:', xhr.responseText);
+            console.error('======================');
+            
+            // Re-enable submit button
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = 'Submit';
+            }
+            
+            // Re-enable checkboxes that were disabled
+            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+              cb.disabled = false;
+            });
+            
+            alert('Error submitting form. Please try again. Status: ' + xhr.status);
+          }
         }
-        return response.json();
-      })
-      .then(data => {
-        console.log('=== SUCCESS RESPONSE ===');
-        console.log('Response data:', data);
-        console.log('Form submission successful!');
-        console.log('=======================');
+      };
+      
+      xhr.onerror = function() {
+        console.error('=== XHR NETWORK ERROR ===');
+        console.error('Network error occurred');
+        console.error('========================');
         
         // Re-enable submit button
         if (submitButton) {
@@ -588,43 +639,15 @@
           submitButton.textContent = 'Submit';
         }
         
-        // Show success message
-        alert('Form submitted successfully!');
-        
-        // Reset form
-        form.reset();
-        
-        // Clear any selected products
-        form.querySelectorAll('.custom-form-selected-product').forEach(selected => {
-          selected.style.display = 'none';
-        });
-        
         // Re-enable checkboxes that were disabled
         form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
           cb.disabled = false;
         });
         
-        console.log('Form reset and cleanup complete');
-      })
-      .catch(error => {
-        console.error('=== FETCH ERROR DEBUG ===');
-        console.error('Fetch error:', error);
-        console.error('Error message:', error.message);
-        console.error('=========================');
-        
-        // Re-enable submit button
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Submit';
-        }
-        
-        // Re-enable checkboxes that were disabled
-        form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-          cb.disabled = false;
-        });
-        
-        alert('Error submitting form. Please try again. Error: ' + error.message);
-      });
+        alert('Network error. Please check your connection and try again.');
+      };
+      
+      xhr.send(JSON.stringify(jsonData));
     });
 
     function validateForm() {
