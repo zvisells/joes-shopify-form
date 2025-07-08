@@ -497,36 +497,43 @@
       // Handle checkbox arrays
       handleCheckboxArrays();
       
-      // Get form data
+      // Convert form to JSON object
       const formData = new FormData(form);
+      const jsonData = { contact: {} };
+      
+      // Convert FormData to JSON
+      for (let [key, value] of formData.entries()) {
+        if (key.startsWith('contact[') && key.endsWith(']')) {
+          const fieldName = key.slice(8, -1); // Remove 'contact[' and ']'
+          jsonData.contact[fieldName] = value;
+        } else {
+          jsonData[key] = value;
+        }
+      }
+      
+      // Add timestamp
+      jsonData.contact.timestamp = new Date().toISOString();
       
       // Log form data for debugging
       console.log('=== SHOPIFY FORM DEBUG ===');
       console.log('Form action URL:', form.action);
-      console.log('Form method:', form.method);
-      console.log('Form fields found:', form.querySelectorAll('input, textarea, select').length);
-      
-      for (let [key, value] of formData.entries()) {
-        console.log('Form data:', key, '=', value);
-      }
-      
-      console.log('FormData entries count:', formData.entries().length);
+      console.log('JSON data:', JSON.stringify(jsonData, null, 2));
       console.log('========================');
-      
-      // Add timestamp
-      formData.set('contact[timestamp]', new Date().toISOString());
       
       console.log('About to submit to:', form.action);
       
-      // Submit via fetch (POST request)
+      // Submit via fetch (POST request with JSON)
       console.log('=== FETCH REQUEST DEBUG ===');
       console.log('Sending request to:', form.action);
       console.log('Request method:', 'POST');
-      console.log('Request body type:', 'FormData');
+      console.log('Request body type:', 'JSON');
       
       fetch(form.action, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jsonData),
         mode: 'cors',
         credentials: 'omit'
       })

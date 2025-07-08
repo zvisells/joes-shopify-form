@@ -32,8 +32,8 @@ export default async function handler(req, res) {
     console.log('Body keys:', req.body ? Object.keys(req.body) : 'undefined');
     console.log('===================');
     
-    // Parse form data - FormData sends as multipart/form-data
-    let formData = {};
+    // Parse JSON data
+    let jsonData = {};
     
     // Validate req.body early to avoid accessing undefined properties
     if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
@@ -48,31 +48,22 @@ export default async function handler(req, res) {
       });
     }
     
-    // Adjust FormData parsing to be more robust
+    // Handle JSON data
     if (typeof req.body === 'object' && req.body !== null) {
-      formData = req.body;
-      console.log('Using parsed object:', formData);
+      jsonData = req.body;
+      console.log('Using parsed JSON object:', jsonData);
     } else if (typeof req.body === 'string') {
-      console.log('Parsing string body:', req.body);
-      const pairs = req.body.split('&');
-      formData = {};
-      
-      for (const pair of pairs) {
-        const [key, value] = pair.split('=');
-        if (key && value) {
-          const decodedKey = decodeURIComponent(key);
-          const decodedValue = decodeURIComponent(value);
-          
-          if (decodedKey.startsWith('contact[') && decodedKey.endsWith(']')) {
-            const fieldName = decodedKey.slice(8, -1);
-            formData.contact = formData.contact || {};
-            formData.contact[fieldName] = decodedValue;
-          } else {
-            formData[decodedKey] = decodedValue;
-          }
-        }
+      try {
+        jsonData = JSON.parse(req.body);
+        console.log('Parsed JSON from string:', jsonData);
+      } catch (e) {
+        console.error('Failed to parse JSON:', e);
+        return res.status(400).json({ 
+          error: 'Invalid JSON format',
+          bodyType: typeof req.body,
+          body: req.body
+        });
       }
-      console.log('Parsed form data:', formData);
     } else {
       return res.status(400).json({ 
         error: 'Invalid body format',
@@ -81,13 +72,13 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('Parsed formData:', formData);
+    console.log('Parsed jsonData:', jsonData);
 
     // Ensure contact exists - handle cases where contact isn't defined
-    const contact = formData.contact || (typeof formData === 'object' ? formData : {});
+    const contact = jsonData.contact || (typeof jsonData === 'object' ? jsonData : {});
     
     console.log('=== CONTACT DATA DEBUG ===');
-    console.log('formData:', JSON.stringify(formData, null, 2));
+    console.log('jsonData:', JSON.stringify(jsonData, null, 2));
     console.log('Extracted contact data:', JSON.stringify(contact, null, 2));
     console.log('All contact fields:', Object.keys(contact));
     console.log('Contact object keys:', contact ? Object.keys(contact) : 'undefined');
