@@ -479,7 +479,7 @@
       console.log('Form action URL:', form.action);
       
       // Check if webhook URL is set
-      if (!form.action || form.action.includes('contact') || form.action === window.location.href) {
+      if (!form.action || form.action === window.location.href || form.action.includes('/contact') && !form.action.includes('vercel.app')) {
         console.error('No webhook URL configured!');
         alert('Form is not configured with a webhook URL. Please set the webhook URL in the theme customizer.');
         return;
