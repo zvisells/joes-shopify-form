@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   try {
     // Debug everything about the request
-    console.log('=== REQUEST DEBUG v3 ===');
+    console.log('=== REQUEST DEBUG v4 - DEPLOYED AT:', new Date().toISOString(), '===');
     console.log('Method:', req.method);
     console.log('Headers:', JSON.stringify(req.headers, null, 2));
     console.log('Content-Type:', req.headers['content-type']);

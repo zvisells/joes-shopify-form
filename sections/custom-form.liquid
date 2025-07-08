@@ -550,13 +550,17 @@
       
       console.log('About to submit to:', form.action);
       
-      // Submit via XMLHttpRequest (bypassing Shopify's fetch wrapper)
-      console.log('=== XMLHttpRequest DEBUG ===');
+      // Submit via original XMLHttpRequest (bypassing Shopify's wrapper)
+      console.log('=== ORIGINAL XHR DEBUG ===');
       console.log('Sending request to:', form.action);
       console.log('Request method:', 'POST');
       console.log('Request body type:', 'JSON');
       
-      const xhr = new XMLHttpRequest();
+      // Store original XMLHttpRequest before Shopify can wrap it
+      const OriginalXHR = window.XMLHttpRequest;
+      console.log('Using original XHR:', OriginalXHR);
+      
+      const xhr = new OriginalXHR();
       xhr.open('POST', form.action, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       
