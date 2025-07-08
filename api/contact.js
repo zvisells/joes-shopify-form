@@ -85,30 +85,31 @@ export default async function handler(req, res) {
 
     console.log('Parsed jsonData:', jsonData);
 
-    // Ensure data exists - handle cases where data isn't defined  
-    const formData = jsonData.data || (typeof jsonData === 'object' ? jsonData : {});
-    
-    console.log('=== FORM DATA DEBUG ===');
+    // ACCEPT ANY DATA STRUCTURE - HARDCODE EVERYTHING FOR TESTING
+    console.log('=== ACCEPTING ANY REQUEST - HARDCODED MODE ===');
     console.log('jsonData:', JSON.stringify(jsonData, null, 2));
-    console.log('jsonData.data exists:', !!jsonData.data);
-    console.log('jsonData.data type:', typeof jsonData.data);
-    console.log('Extracted form data:', JSON.stringify(formData, null, 2));
-    console.log('All form fields:', Object.keys(formData));
-    console.log('Form data object keys:', formData ? Object.keys(formData) : 'undefined');
-    console.log('Form data is empty:', Object.keys(formData).length === 0);
-    console.log('========================');
+    console.log('jsonData keys:', Object.keys(jsonData));
     
-    // TEMPORARILY HARDCODE EMAIL FOR TESTING
-    let email = 'zvisells@gmail.com';
-    console.log('=== EMAIL SEARCH DEBUG ===');
-    console.log('HARDCODED EMAIL FOR TESTING:', email);
-    console.log('Email value check:', email);
-    console.log('Email is truthy:', !!email);
-    console.log('Email type:', typeof email);
-    console.log('========================');
+    // Try multiple possible data locations
+    const possibleData = jsonData.data || jsonData.contact || jsonData || {};
+    console.log('Possible data found:', JSON.stringify(possibleData, null, 2));
     
-    // Skip email validation since we're hardcoding it
-    console.log('✅ SKIPPING EMAIL VALIDATION - USING HARDCODED EMAIL');
+    // HARDCODE EVERYTHING FOR TESTING
+    const formData = {
+      email: 'zvisells@gmail.com',
+      'full-name': 'Test User',
+      message: 'Test message from Shopify form',
+      subject: 'Test Form Submission',
+      timestamp: new Date().toISOString(),
+      ...possibleData  // Add any actual form data on top
+    };
+    
+    console.log('=== FINAL FORM DATA (HARDCODED) ===');
+    console.log('Form data:', JSON.stringify(formData, null, 2));
+    console.log('======================================');
+    
+    let email = formData.email;
+    console.log('✅ EMAIL CONFIRMED:', email);
     
     // Add email to form data for consistency
     formData.email = email;
