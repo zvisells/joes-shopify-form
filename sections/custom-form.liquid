@@ -357,15 +357,39 @@
     border-radius: calc(var(--border-radius) / 2);
     font-size: 1.2rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     border: 1px solid rgba(var(--color-foreground), 0.1);
     display: block;
     margin-bottom: 0.5rem;
+    position: relative;
+    user-select: none;
   }
 
   .product-result-variant:hover {
     background: rgba(var(--color-accent), 0.2);
     border-color: rgba(var(--color-accent), 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(var(--color-accent), 0.1);
+  }
+
+  .product-result-variant:active {
+    transform: translateY(0);
+    background: rgba(var(--color-accent), 0.3);
+  }
+
+  .product-result-variant::before {
+    content: "Click to select";
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.9rem;
+    color: rgba(var(--color-foreground), 0.5);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .product-result-variant:hover::before {
+    opacity: 1;
   }
 
   .variant-name {
@@ -817,35 +841,50 @@
 
         results.innerHTML = '';
         products.forEach(product => {
+          console.log('Processing product:', product.title, 'with', product.variants.length, 'variants');
+          
           const productDiv = document.createElement('div');
           productDiv.className = 'custom-form-product-result';
           productDiv.innerHTML = `
             <div class="product-result-title">${product.title}</div>
             <div class="product-result-variants">
-              ${product.variants.map(variant => 
-                `<span class="product-result-variant" 
+              ${product.variants.map((variant, index) => {
+                console.log(`Variant ${index + 1}:`, variant);
+                return `<span class="product-result-variant" 
                    data-product-id="${product.id}" 
                    data-variant-id="${variant.id}" 
                    data-product-title="${product.title}" 
                    data-variant-title="${variant.title}"
                    data-variant-sku="${variant.sku || 'N/A'}"
                    data-variant-price="${variant.price || '0'}"
-                   title="SKU: ${variant.sku || 'N/A'} | Price: ${variant.price ? '$' + (variant.price/100).toFixed(2) : 'N/A'}">
+                   title="Click to select: ${variant.title} | SKU: ${variant.sku || 'N/A'} | Price: ${variant.price ? '$' + (variant.price/100).toFixed(2) : 'N/A'}">
                   <div class="variant-name">${variant.title}</div>
                   <div class="variant-details">
                     <span class="variant-sku">SKU: ${variant.sku || 'N/A'}</span>
                     ${variant.price ? `<span class="variant-price">$${(variant.price/100).toFixed(2)}</span>` : ''}
                   </div>
-                </span>`
-              ).join('')}
+                </span>`;
+              }).join('')}
             </div>
           `;
           results.appendChild(productDiv);
         });
 
         // Add click handlers to variants
-        results.querySelectorAll('.product-result-variant').forEach(variant => {
-          variant.addEventListener('click', function() {
+        const variantElements = results.querySelectorAll('.product-result-variant');
+        console.log(`Adding click handlers to ${variantElements.length} variants`);
+        
+        variantElements.forEach((variant, index) => {
+          console.log(`Setting up variant ${index + 1}:`, variant.dataset);
+          
+          variant.addEventListener('click', function(e) {
+            console.log('Variant clicked:', this.dataset);
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Add visual feedback
+            this.style.background = 'rgba(var(--color-accent), 0.4)';
+            
             selectProduct(
               this.dataset.productId,
               this.dataset.variantId,
@@ -855,12 +894,26 @@
               this.dataset.variantPrice
             );
           });
+          
+          // Also add keyboard support
+          variant.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.click();
+            }
+          });
+          
+          // Make it focusable
+          variant.setAttribute('tabindex', '0');
         });
 
         results.style.display = 'block';
       }
 
       function selectProduct(productId, variantId, productTitle, variantTitle, variantSku, variantPrice) {
+        console.log('=== SELECT PRODUCT CALLED ===');
+        console.log('Parameters:', { productId, variantId, productTitle, variantTitle, variantSku, variantPrice });
+        
         // Create comprehensive product data object
         const productData = {
           product_id: productId,
@@ -872,22 +925,45 @@
           display_text: `${productTitle} - ${variantTitle} (SKU: ${variantSku || 'N/A'})`
         };
         
+        console.log('Product data object:', productData);
+        
         // Store as JSON string for form submission
         hiddenInput.value = JSON.stringify(productData);
+        console.log('Hidden input value set to:', hiddenInput.value);
         
         // Update display
-        selectedProduct.querySelector('.selected-product-title').textContent = productTitle;
-        selectedProduct.querySelector('.selected-product-variant').innerHTML = `
-          <div>${variantTitle}</div>
-          <div class="selected-product-sku">SKU: ${variantSku || 'N/A'}</div>
-          ${variantPrice && variantPrice !== '0' ? `<div class="selected-product-price">$${(variantPrice/100).toFixed(2)}</div>` : ''}
-        `;
+        console.log('Updating display elements...');
+        const titleElement = selectedProduct.querySelector('.selected-product-title');
+        const variantElement = selectedProduct.querySelector('.selected-product-variant');
+        
+        if (titleElement) {
+          titleElement.textContent = productTitle;
+          console.log('Title updated');
+        } else {
+          console.error('Title element not found');
+        }
+        
+        if (variantElement) {
+          variantElement.innerHTML = `
+            <div>${variantTitle}</div>
+            <div class="selected-product-sku">SKU: ${variantSku || 'N/A'}</div>
+            ${variantPrice && variantPrice !== '0' ? `<div class="selected-product-price">$${(variantPrice/100).toFixed(2)}</div>` : ''}
+          `;
+          console.log('Variant element updated');
+        } else {
+          console.error('Variant element not found');
+        }
+        
         selectedProduct.style.display = 'flex';
+        console.log('Selected product display set to flex');
         
         input.value = productData.display_text;
-        hideResults();
+        console.log('Input value set to:', input.value);
         
-        console.log('Selected product:', productData);
+        hideResults();
+        console.log('Results hidden');
+        
+        console.log('=== PRODUCT SELECTION COMPLETE ===');
       }
 
       function clearSelection() {
